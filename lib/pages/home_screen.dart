@@ -12,6 +12,7 @@ import 'package:flutter_realtime_object_detection/app/base/base_stateful.dart';
 import 'package:flutter_realtime_object_detection/main.dart';
 import 'package:flutter_realtime_object_detection/services/navigation_service.dart';
 import 'package:flutter_realtime_object_detection/services/tensorflow_service.dart';
+import 'package:flutter_realtime_object_detection/speed/Body.dart';
 import 'package:flutter_realtime_object_detection/view_models/home_view_model.dart';
 import 'package:flutter_realtime_object_detection/widgets/aperture/aperture_widget.dart';
 import 'package:flutter_realtime_object_detection/widgets/confidence_widget.dart';
@@ -53,9 +54,7 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     super.initState();
     loadModel(viewModel.state.type);
     initCamera();
-    // 2021.12.06.월요일........... 김형태 아래코드 1줄 추가 했습니다.
-    viewModel.getSpeed();
-    // ====================
+
     apertureController = StreamController<Map>.broadcast();
     screenshotController = ScreenshotController();
   }
@@ -323,11 +322,14 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
                 ]),
       ],
       backgroundColor: AppColors.blue,
+      /*
       title: Text(
         AppStrings.title,
         style: AppTextStyles.boldTextStyle(
             color: AppColors.white, fontSize: AppFontSizes.large),
       ),
+      */
+      title: Body(), // 여기 수정.
     );
   }
 

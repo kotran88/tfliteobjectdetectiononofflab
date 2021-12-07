@@ -1,7 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_realtime_object_detection/app/base/base_view_model.dart';
+import 'package:flutter_realtime_object_detection/speed/providers/speedometer_provider.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import '/models/recognition.dart';
 import 'package:flutter_realtime_object_detection/services/tensorflow_service.dart';
 import 'package:flutter_realtime_object_detection/view_states/home_view_state.dart';
@@ -13,9 +15,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 class HomeViewModel extends BaseViewModel<HomeViewState> {
   bool _isLoadModel = false;
   bool _isDetecting = false;
-  // 2021.12.06.월요일........... 김형태 아래코드 1줄 추가 했습니다.
-  double speed = 0.0; // 속도
-  // =========================
   AudioCache player = new AudioCache();
   ListQueue<String> variable_name = ListQueue<String>();
   late TensorFlowService _tensorFlowService;
@@ -31,35 +30,6 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
     state.cameraIndex = state.cameraIndex == 0 ? 1 : 0;
     this.notifyListeners();
   }
-
-  // // 2021.12.06.월요일........... 김형태 함수 추가 했습니다.
-  void getSpeed() async {
-    print("getSpeed start");
-    var geolocator = Geolocator();
-    print(geolocator.checkGeolocationPermissionStatus());
-    var options = LocationOptions(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 0,
-    );
-
-    // 앱의 상태가 변경될때마다 이벤트 발동.
-    geolocator.getPositionStream(options).listen((position) {
-      speed = position.speed;
-      print("speed == ${speed}");
-
-      // 토스트 메세지..
-      Fluttertoast.showToast(
-        msg: "speedInMps == ${speed}",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 13.0,
-      );
-    });
-  }
-  // =====================================================
 
 // Future<void> getPosition() async {
 //     var currentPosition = await Geolocator()
@@ -93,8 +63,22 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
         this._isDetecting = true;
         int startTime = new DateTime.now().millisecondsSinceEpoch;
 
+        print("================================================");
+        print(SpeedometerProvider.speedCar.toString());
+        print("================================================");
         // 2021.12.06.월요일........... 김형태 아래코드 3줄 추가 했습니다.
-        if (speed > 5) {
+        // final providerData = Provider.of<SpeedometerProvider>(context);
+        if (SpeedometerProvider.speedCar > 5) {
+          Fluttertoast.showToast(
+            msg: "속도가 5를 넘었습니다.",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+          print("속도가 5를 넘었습니다.");
           return;
         }
         // ================

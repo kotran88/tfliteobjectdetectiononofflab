@@ -7,13 +7,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flutter_realtime_object_detectionmain1116/main.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MultiProvider(
+      providers: [],
+    ));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
