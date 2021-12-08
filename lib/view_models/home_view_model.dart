@@ -18,6 +18,13 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
   AudioCache player = new AudioCache();
   ListQueue<String> variable_name = ListQueue<String>();
   late TensorFlowService _tensorFlowService;
+  String _recognitionsColor = ""; // 색깔
+  String get getRecognitionsColor => _recognitionsColor;
+
+  void setRecognitionsColor(String recognitionsColor) {
+    _recognitionsColor = recognitionsColor;
+    this.notifyListeners();
+  }
 
   HomeViewModel(BuildContext context, this._tensorFlowService)
       : super(context, HomeViewState(_tensorFlowService.type));
@@ -67,25 +74,28 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
         print(SpeedometerProvider.speedCar.toString());
         print("================================================");
         // 2021.12.06.월요일........... 김형태 아래코드 3줄 추가 했습니다.
+        // update 2021.12.08.수요일 ...... 김형태 주석 처리 했습니다...
         // final providerData = Provider.of<SpeedometerProvider>(context);
-        if (SpeedometerProvider.speedCar > 5) {
-          Fluttertoast.showToast(
-            msg: "속도가 5를 넘었습니다.",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
-          print("속도가 5를 넘었습니다.");
-          return;
-        }
+
+        // if (SpeedometerProvider.speedCar > 5) {
+        //   Fluttertoast.showToast(
+        //     msg: "속도가 5를 넘었습니다.",
+        //     toastLength: Toast.LENGTH_SHORT,
+        //     gravity: ToastGravity.BOTTOM,
+        //     timeInSecForIosWeb: 1,
+        //     backgroundColor: Colors.red,
+        //     textColor: Colors.white,
+        //     fontSize: 16.0,
+        //   );
+        //   print("속도가 5를 넘었습니다.");
+        //   return;
+        // }
         // ================
         var recognitions =
             await this._tensorFlowService.runModelOnFrame(cameraImage);
         int endTime = new DateTime.now().millisecondsSinceEpoch;
         // try{
+
         if (recognitions?.length == 1) {
           print("showresultadding-1-1-1-1-1-" +
               recognitions?[0]["detectedClass"]);
@@ -94,6 +104,9 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
               recognitions?[0]["detectedClass"] == "redleft" ||
               recognitions?[0]["detectedClass"] == "greenleft") {
             variable_name.add(recognitions?[0]["detectedClass"]);
+            // recognitionsColor = recognitions?[0]["detectedClass"]; // update 2021.12.08.수요일 김형태 코드추가
+            setRecognitionsColor(recognitions?[0]
+                ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
           }
         } else if (recognitions?.length == 2) {
           if (recognitions?[1]["detectedClass"] == "red" ||
@@ -102,6 +115,9 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
               recognitions?[1]["detectedClass"] == "greenleft") {
             print("showresultadding1111" + recognitions?[1]["detectedClass"]);
             variable_name.add(recognitions?[1]["detectedClass"]);
+            // recognitionsColor = recognitions?[1]["detectedClass"]; // update 2021.12.08.수요일 김형태 코드추가
+            setRecognitionsColor(recognitions?[1]
+                ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
           }
           if (recognitions?[0]["detectedClass"] == "red" ||
               recognitions?[0]["detectedClass"] == "green" ||
@@ -109,6 +125,9 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
               recognitions?[0]["detectedClass"] == "greenleft") {
             print("showresultadding0000" + recognitions?[0]["detectedClass"]);
             variable_name.add(recognitions?[0]["detectedClass"]);
+            // recognitionsColor = recognitions?[0]["detectedClass"];// update 2021.12.08.수요일 김형태 코드추가
+            setRecognitionsColor(recognitions?[0]
+                ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
           }
           // print(recognitions?[1]["detectedClass"] );
           // print(recognitions?[1]["confidenceInClass"]);

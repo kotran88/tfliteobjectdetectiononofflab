@@ -423,69 +423,84 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     );
   }
 
-  Align getSearchBox() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.3,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+  Widget getSearchBox() {
+    return Consumer<HomeViewModel>(
+      builder: (BuildContext context, value, Widget? child) {
+        return Align(
+          alignment: Alignment.bottomCenter,
           child: Container(
-            color: Colors.white,
-            child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: <Widget>[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.7,
-                            child: TextFormField(
-                              controller: searchController,
-                              decoration: InputDecoration(
-                                hintText: "Search",
-                                labelText: "Search",
-                                labelStyle: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.black,
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                color: Colors.white,
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: <Widget>[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.7,
+                                child: TextFormField(
+                                  controller: searchController,
+                                  decoration: InputDecoration(
+                                    hintText: "Search",
+                                    labelText: "Search",
+                                    labelStyle: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black,
+                                    ),
+                                    floatingLabelBehavior:
+                                        FloatingLabelBehavior.always,
+                                    border: UnderlineInputBorder(),
+                                  ),
                                 ),
-                                floatingLabelBehavior:
-                                    FloatingLabelBehavior.always,
-                                border: UnderlineInputBorder(),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          color: Colors.grey[300],
-                          padding: EdgeInsets.symmetric(
-                            vertical: MediaQuery.of(context).size.width * 0.01,
-                          ),
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.2,
-                            child: TextButton(
-                              onPressed: submit,
-                              child: Text(
-                                "submit",
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              color: Colors.grey[300],
+                              padding: EdgeInsets.symmetric(
+                                vertical:
+                                    MediaQuery.of(context).size.width * 0.01,
+                              ),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.2,
+                                child: TextButton(
+                                  onPressed: submit,
+                                  child: Text(
+                                    "submit",
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    // update 2021.12.08.수요일 김형태 코드추가
+                    // HomeViewModel클래스의 _recognitionsColor을 가져와서 뿌려줍니다.
+                    Container(
+                      color: Colors.red,
+                      child: Text(
+                        value.getRecognitionsColor.toString() == ""
+                            ? "공백입니다."
+                            : value.getRecognitionsColor.toString(),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
