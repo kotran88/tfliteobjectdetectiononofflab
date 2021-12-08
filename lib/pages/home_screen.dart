@@ -17,6 +17,7 @@ import 'package:flutter_realtime_object_detection/view_models/home_view_model.da
 import 'package:flutter_realtime_object_detection/widgets/aperture/aperture_widget.dart';
 import 'package:flutter_realtime_object_detection/widgets/confidence_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -39,6 +40,8 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
   late ScreenshotController screenshotController;
 
   late Uint8List _imageFile;
+
+  TextEditingController searchController = TextEditingController();
 
   @override
   bool get wantKeepAlive => true;
@@ -355,61 +358,152 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     final maxWidth =
         screenRatio > previewRatio ? screenHeight / previewRatio : screenWidth;
 
-    return Container(
+    return GestureDetector(
+      onTap: FocusScope.of(context).unfocus,
+      child: Container(
         height: MediaQuery.of(context).size.height,
         width: double.infinity,
         color: Colors.grey.shade900,
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Container(
-              width: MediaQuery.of(context).size.width,
-              child: Screenshot(
-                  controller: screenshotController,
-                  child: Stack(
+            width: MediaQuery.of(context).size.width,
+            child: Screenshot(
+              controller: screenshotController,
+              child: Stack(
+                children: <Widget>[
+                  OverflowBox(
+                    maxHeight: maxHeight,
+                    maxWidth: maxWidth,
+                    child: FutureBuilder<void>(
+                        future: _initializeControllerFuture,
+                        builder: (_, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            return CameraPreview(_cameraController);
+                          } else {
+                            return const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.blue));
+                          }
+                        }),
+                  ),
+                  Consumer<HomeViewModel>(builder: (_, homeViewModel, __) {
+                    return ConfidenceWidget(
+                      heightAppBar: heightAppBar,
+                      entities: homeViewModel.state.recognitions,
+                      previewHeight: max(homeViewModel.state.heightImage,
+                          homeViewModel.state.widthImage),
+                      previewWidth: min(homeViewModel.state.heightImage,
+                          homeViewModel.state.widthImage),
+                      screenWidth: MediaQuery.of(context).size.width,
+                      screenHeight: MediaQuery.of(context).size.height,
+                      type: homeViewModel.state.type,
+                    );
+                  }),
+                  OverflowBox(
+                    maxHeight: maxHeight,
+                    maxWidth: maxWidth,
+                    child: ApertureWidget(
+                      apertureController: apertureController,
+                    ),
+                  ),
+                  // Container(
+                  //   decoration: BoxDecoration(
+                  //     border: Border.all(color: Colors.red, width: 2)
+                  //   ),
+                  // )
+                  getSearchBox(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Align getSearchBox() {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.3,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            color: Colors.white,
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
                     children: <Widget>[
-                      OverflowBox(
-                        maxHeight: maxHeight,
-                        maxWidth: maxWidth,
-                        child: FutureBuilder<void>(
-                            future: _initializeControllerFuture,
-                            builder: (_, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.done) {
-                                return CameraPreview(_cameraController);
-                              } else {
-                                return const Center(
-                                    child: CircularProgressIndicator(
-                                        color: AppColors.blue));
-                              }
-                            }),
-                      ),
-                      Consumer<HomeViewModel>(builder: (_, homeViewModel, __) {
-                        return ConfidenceWidget(
-                          heightAppBar: heightAppBar,
-                          entities: homeViewModel.state.recognitions,
-                          previewHeight: max(homeViewModel.state.heightImage,
-                              homeViewModel.state.widthImage),
-                          previewWidth: min(homeViewModel.state.heightImage,
-                              homeViewModel.state.widthImage),
-                          screenWidth: MediaQuery.of(context).size.width,
-                          screenHeight: MediaQuery.of(context).size.height,
-                          type: homeViewModel.state.type,
-                        );
-                      }),
-                      OverflowBox(
-                        maxHeight: maxHeight,
-                        maxWidth: maxWidth,
-                        child: ApertureWidget(
-                          apertureController: apertureController,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.7,
+                            child: TextFormField(
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                hintText: "Search",
+                                labelText: "Search",
+                                labelStyle: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
+                                border: UnderlineInputBorder(),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      // Container(
-                      //   decoration: BoxDecoration(
-                      //     border: Border.all(color: Colors.red, width: 2)
-                      //   ),
-                      // )
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          color: Colors.grey[300],
+                          padding: EdgeInsets.symmetric(
+                            vertical: MediaQuery.of(context).size.width * 0.01,
+                          ),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.2,
+                            child: TextButton(
+                              onPressed: submit,
+                              child: Text(
+                                "submit",
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
-                  ))),
-        ));
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void submit() {
+    String message = searchController.text;
+    if (message == "" || message.length == 0) {
+      return;
+    }
+    searchController.clear();
+
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 }
