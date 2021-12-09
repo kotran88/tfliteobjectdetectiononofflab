@@ -8,8 +8,4 @@ motor
 person
 bus
 truck
-nightgreen
-nightgreenleft
-nightred
-nightredleft
 ganpan

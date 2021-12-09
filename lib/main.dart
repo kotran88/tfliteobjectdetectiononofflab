@@ -21,7 +21,6 @@ Future<void> main() async {
     child: Application(),
   ));
 }
-
 class Application extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

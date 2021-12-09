@@ -79,7 +79,7 @@ flutter:
 
 
     - assets/models/label.txt
-    - assets/models/quantized11115.tflite
+    - assets/models/quantized11206.tflite
 
     - assets/models/posenet_mv1_checkpoints.tflite
     - assets/fonts/

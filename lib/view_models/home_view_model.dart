@@ -19,13 +19,19 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
   ListQueue<String> variable_name = ListQueue<String>();
   late TensorFlowService _tensorFlowService;
   String _recognitionsColor = ""; // 색깔
+  String _cColor = ""; // 색깔
   String get getRecognitionsColor => _recognitionsColor;
+  String get currentColor => _cColor;
 
   void setRecognitionsColor(String recognitionsColor) {
     _recognitionsColor = recognitionsColor;
     this.notifyListeners();
   }
-
+  
+void setCurrentColor(String cColor) {
+    _cColor = cColor;
+    this.notifyListeners();
+  }
   HomeViewModel(BuildContext context, this._tensorFlowService)
       : super(context, HomeViewState(_tensorFlowService.type));
 
@@ -105,8 +111,8 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
               recognitions?[0]["detectedClass"] == "greenleft") {
             variable_name.add(recognitions?[0]["detectedClass"]);
             // recognitionsColor = recognitions?[0]["detectedClass"]; // update 2021.12.08.수요일 김형태 코드추가
-            setRecognitionsColor(recognitions?[0]
-                ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
+            // setRecognitionsColor(recognitions?[0]
+            //     ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
           }
         } else if (recognitions?.length == 2) {
           if (recognitions?[1]["detectedClass"] == "red" ||
@@ -116,8 +122,8 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
             print("showresultadding1111" + recognitions?[1]["detectedClass"]);
             variable_name.add(recognitions?[1]["detectedClass"]);
             // recognitionsColor = recognitions?[1]["detectedClass"]; // update 2021.12.08.수요일 김형태 코드추가
-            setRecognitionsColor(recognitions?[1]
-                ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
+            // setRecognitionsColor(recognitions?[1]
+            //     ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
           }
           if (recognitions?[0]["detectedClass"] == "red" ||
               recognitions?[0]["detectedClass"] == "green" ||
@@ -126,8 +132,8 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
             print("showresultadding0000" + recognitions?[0]["detectedClass"]);
             variable_name.add(recognitions?[0]["detectedClass"]);
             // recognitionsColor = recognitions?[0]["detectedClass"];// update 2021.12.08.수요일 김형태 코드추가
-            setRecognitionsColor(recognitions?[0]
-                ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
+            // setRecognitionsColor(recognitions?[0]
+            //     ["detectedClass"]); // update 2021.12.08.수요일 김형태 코드추가
           }
           // print(recognitions?[1]["detectedClass"] );
           // print(recognitions?[1]["confidenceInClass"]);
@@ -161,7 +167,18 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
             fifth = element;
           }
         });
-
+        setRecognitionsColor(first +
+            "/" +
+            second +
+            "//" +
+            third +
+            "///" +
+            fourth +
+            "////" +
+            fifth);
+        if(first==second&&first==third&&first==fourth&&first==fifth){
+          setCurrentColor(first);
+        }
 //red -> redleft , green , greenleft
         print("showresult" +
             first +
@@ -179,8 +196,11 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
                 (fourth == "greenleft" && fifth == "greenleft") ||
                 (fourth == "redleft" && fifth == "redleft"))) {
           print("showresult sound alarm");
+            if(SpeedometerProvider.speedCar < 5){
+
           const alarm = "click1.mp3";
           player.play(alarm);
+            }
 // variable_name.removeFirst();
 
         }
@@ -190,8 +210,12 @@ class HomeViewModel extends BaseViewModel<HomeViewState> {
             second == "green" &&
             (fourth == "greenleft" && fifth == "greenleft")) {
           print("showresult sound qqqqqqqqqqquack larm");
-          const alarm = "quack.mp3";
+
+          if(SpeedometerProvider.speedCar < 5){
+const alarm = "quack.mp3";
           player.play(alarm);
+          }
+          
 // variable_name.removeFirst();
         }
         if (variable_name.length > 4) {

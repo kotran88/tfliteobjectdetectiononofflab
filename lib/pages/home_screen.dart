@@ -174,10 +174,24 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
   }
 
   Future<bool> handleCaptureClick() async {
+    print("handleCaptureClick 1 ");
     screenshotController.capture().then((value) async {
+
+    print("handleCaptureClick 12 ");
       if (value != null) {
-        final cameraImage = await _cameraController.takePicture();
-        await renderedAndSaveImage(value, cameraImage);
+
+    print("handleCaptureClick 13 ");
+        // final cameraImage = await _cameraController.takePicture();
+
+        try {
+      XFile file = await _cameraController.takePicture();
+      return file;
+    } on CameraException catch (e) {
+          print(e.toString()+"handleCaptureClick 144 ");
+      return null;
+    }
+    print("handleCaptureClick 1455 ");
+        // await renderedAndSaveImage(value, cameraImage);
       }
     });
     return true;
@@ -186,13 +200,13 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
   Future<bool> renderedAndSaveImage(Uint8List draw, XFile camera) async {
     UI.Image cameraImage =
         await decodeImageFromList(await camera.readAsBytes());
-
+    print("renderedandsaveimage 1 ");
     UI.Codec codec = await UI.instantiateImageCodec(draw);
     var detectionImage = (await codec.getNextFrame()).image;
 
     var cameraRatio = cameraImage.height / cameraImage.width;
     var previewRatio = detectionImage.height / detectionImage.width;
-
+ print("renderedandsaveimage 12 ");
     double scaleWidth, scaleHeight;
     if (cameraRatio > previewRatio) {
       scaleWidth = cameraImage.width.toDouble();
@@ -203,7 +217,7 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     }
     var difW = (scaleWidth - cameraImage.width) / 2;
     var difH = (scaleHeight - cameraImage.height) / 2;
-
+ print("renderedandsaveimage 13 ");
     final recorder = UI.PictureRecorder();
     final canvas = new Canvas(
         recorder,
@@ -211,18 +225,18 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
             new Offset(0.0, 0.0),
             new Offset(
                 cameraImage.width.toDouble(), cameraImage.height.toDouble())));
-
+ print("renderedandsaveimage 14 ");
     canvas.drawImage(cameraImage, Offset.zero, Paint());
-
+ print("renderedandsaveimage 15 ");
     codec = await UI.instantiateImageCodec(draw,
         targetWidth: scaleWidth.toInt(), targetHeight: scaleHeight.toInt());
     detectionImage = (await codec.getNextFrame()).image;
 
     canvas.drawImage(detectionImage, Offset(difW.abs(), difH.abs()), Paint());
-
+ print("renderedandsaveimage 16 ");
     canvas.save();
     canvas.restore();
-
+ print("renderedandsaveimage 17 ");
     final picture = recorder.endRecording();
 
     var img = await picture.toImage(scaleWidth.toInt(), scaleHeight.toInt());
@@ -249,80 +263,80 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
       elevation: 0.0,
       centerTitle: true,
       actions: [
-        IconButton(
-            onPressed: () {
-              _gotoRepo();
-            },
-            icon: Icon(AppIcons.linkOption, semanticLabel: 'Repo')),
-        PopupMenuButton<ModelType>(
-            onSelected: (item) => handleSwitchSource(item),
-            color: AppColors.white,
-            itemBuilder: (context) => [
-                  PopupMenuItem(
-                      enabled: !viewModel.state.isYolo(),
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.api,
-                              color: !viewModel.state.isYolo()
-                                  ? AppColors.black
-                                  : AppColors.grey),
-                          Text(' YOLO',
-                              style: AppTextStyles.regularTextStyle(
-                                  color: !viewModel.state.isYolo()
-                                      ? AppColors.black
-                                      : AppColors.grey)),
-                        ],
-                      ),
-                      value: ModelType.YOLO),
-                  PopupMenuItem(
-                      enabled: !viewModel.state.isSSDMobileNet(),
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.api,
-                              color: !viewModel.state.isSSDMobileNet()
-                                  ? AppColors.black
-                                  : AppColors.grey),
-                          Text(' SSD MobileNet',
-                              style: AppTextStyles.regularTextStyle(
-                                  color: !viewModel.state.isSSDMobileNet()
-                                      ? AppColors.black
-                                      : AppColors.grey)),
-                        ],
-                      ),
-                      value: ModelType.SSDMobileNet),
-                  PopupMenuItem(
-                      enabled: !viewModel.state.isMobileNet(),
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.api,
-                              color: !viewModel.state.isMobileNet()
-                                  ? AppColors.black
-                                  : AppColors.grey),
-                          Text(' MobileNet',
-                              style: AppTextStyles.regularTextStyle(
-                                  color: !viewModel.state.isMobileNet()
-                                      ? AppColors.black
-                                      : AppColors.grey)),
-                        ],
-                      ),
-                      value: ModelType.MobileNet),
-                  PopupMenuItem(
-                      enabled: !viewModel.state.isPoseNet(),
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.api,
-                              color: !viewModel.state.isPoseNet()
-                                  ? AppColors.black
-                                  : AppColors.grey),
-                          Text(' PoseNet',
-                              style: AppTextStyles.regularTextStyle(
-                                  color: !viewModel.state.isPoseNet()
-                                      ? AppColors.black
-                                      : AppColors.grey)),
-                        ],
-                      ),
-                      value: ModelType.PoseNet),
-                ]),
+        // IconButton(
+        //     onPressed: () {
+        //       _gotoRepo();
+        //     },
+        //     icon: Icon(AppIcons.linkOption, semanticLabel: 'Repo')),
+        // PopupMenuButton<ModelType>(
+        //     onSelected: (item) => handleSwitchSource(item),
+        //     color: AppColors.white,
+        //     itemBuilder: (context) => [
+        //           PopupMenuItem(
+        //               enabled: !viewModel.state.isYolo(),
+        //               child: Row(
+        //                 children: <Widget>[
+        //                   Icon(Icons.api,
+        //                       color: !viewModel.state.isYolo()
+        //                           ? AppColors.black
+        //                           : AppColors.grey),
+        //                   Text(' YOLO',
+        //                       style: AppTextStyles.regularTextStyle(
+        //                           color: !viewModel.state.isYolo()
+        //                               ? AppColors.black
+        //                               : AppColors.grey)),
+        //                 ],
+        //               ),
+        //               value: ModelType.YOLO),
+        //           PopupMenuItem(
+        //               enabled: !viewModel.state.isSSDMobileNet(),
+        //               child: Row(
+        //                 children: <Widget>[
+        //                   Icon(Icons.api,
+        //                       color: !viewModel.state.isSSDMobileNet()
+        //                           ? AppColors.black
+        //                           : AppColors.grey),
+        //                   Text(' SSD MobileNet',
+        //                       style: AppTextStyles.regularTextStyle(
+        //                           color: !viewModel.state.isSSDMobileNet()
+        //                               ? AppColors.black
+        //                               : AppColors.grey)),
+        //                 ],
+        //               ),
+        //               value: ModelType.SSDMobileNet),
+        //           PopupMenuItem(
+        //               enabled: !viewModel.state.isMobileNet(),
+        //               child: Row(
+        //                 children: <Widget>[
+        //                   Icon(Icons.api,
+        //                       color: !viewModel.state.isMobileNet()
+        //                           ? AppColors.black
+        //                           : AppColors.grey),
+        //                   Text(' MobileNet',
+        //                       style: AppTextStyles.regularTextStyle(
+        //                           color: !viewModel.state.isMobileNet()
+        //                               ? AppColors.black
+        //                               : AppColors.grey)),
+        //                 ],
+        //               ),
+        //               value: ModelType.MobileNet),
+        //           PopupMenuItem(
+        //               enabled: !viewModel.state.isPoseNet(),
+        //               child: Row(
+        //                 children: <Widget>[
+        //                   Icon(Icons.api,
+        //                       color: !viewModel.state.isPoseNet()
+        //                           ? AppColors.black
+        //                           : AppColors.grey),
+        //                   Text(' PoseNet',
+        //                       style: AppTextStyles.regularTextStyle(
+        //                           color: !viewModel.state.isPoseNet()
+        //                               ? AppColors.black
+        //                               : AppColors.grey)),
+        //                 ],
+        //               ),
+        //               value: ModelType.PoseNet),
+        //         ]),
       ],
       backgroundColor: AppColors.blue,
       /*
@@ -440,47 +454,47 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
                         children: <Widget>[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.7,
-                                child: TextFormField(
-                                  controller: searchController,
-                                  decoration: InputDecoration(
-                                    hintText: "Search",
-                                    labelText: "Search",
-                                    labelStyle: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.black,
-                                    ),
-                                    floatingLabelBehavior:
-                                        FloatingLabelBehavior.always,
-                                    border: UnderlineInputBorder(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              color: Colors.grey[300],
-                              padding: EdgeInsets.symmetric(
-                                vertical:
-                                    MediaQuery.of(context).size.width * 0.01,
-                              ),
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.2,
-                                child: TextButton(
-                                  onPressed: submit,
-                                  child: Text(
-                                    "submit",
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                          // ClipRRect(
+                          //   borderRadius: BorderRadius.circular(8),
+                          //   child: Container(
+                          //     child: SizedBox(
+                          //       width: MediaQuery.of(context).size.width * 0.7,
+                          //       child: TextFormField(
+                          //         controller: searchController,
+                          //         decoration: InputDecoration(
+                          //           hintText: "Search",
+                          //           labelText: "Search",
+                          //           labelStyle: TextStyle(
+                          //             fontSize: 13,
+                          //             color: Colors.black,
+                          //           ),
+                          //           floatingLabelBehavior:
+                          //               FloatingLabelBehavior.always,
+                          //           border: UnderlineInputBorder(),
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
+                          // ClipRRect(
+                          //   borderRadius: BorderRadius.circular(8),
+                          //   child: Container(
+                          //     color: Colors.grey[300],
+                          //     padding: EdgeInsets.symmetric(
+                          //       vertical:
+                          //           MediaQuery.of(context).size.width * 0.01,
+                          //     ),
+                          //     child: SizedBox(
+                          //       width: MediaQuery.of(context).size.width * 0.2,
+                          //       child: TextButton(
+                          //         onPressed: submit,
+                          //         child: Text(
+                          //           "submit",
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -492,6 +506,15 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
                         value.getRecognitionsColor.toString() == ""
                             ? "공백입니다."
                             : value.getRecognitionsColor.toString(),
+                      ),
+                    ),
+
+                    Container(
+                      color: Colors.blue,
+                      child: Text(
+                        value.getRecognitionsColor.toString() == ""
+                            ? "공백"
+                            : value.currentColor.toString(),
                       ),
                     ),
                   ],

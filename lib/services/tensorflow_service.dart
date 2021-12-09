@@ -27,7 +27,7 @@ class TensorFlowService {
           break;
         case ModelType.SSDMobileNet:
           res = await Tflite.loadModel(
-              model: 'assets/models/newtf.tflite',
+              model: 'assets/models/quantized11206.tflite',
               labels: 'assets/models/newmobnet.txt');
           break;
         case ModelType.MobileNet:
