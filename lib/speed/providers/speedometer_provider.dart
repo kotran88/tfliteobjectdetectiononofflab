@@ -31,7 +31,7 @@ class SpeedometerProvider with ChangeNotifier {
     if (_permissionGranted == PermissionStatus.denied) {
       _permissionGranted = await location.requestPermission();
       if (_permissionGranted != PermissionStatus.granted) {
-        showErrorToast("차량 속도계를 사용하려면 위치 권한이 있어야 차량 속도를 측정할 수 있습니다.");
+        showErrorToast("차량 속도계를 사용k하려면 위치 권한이 있어야 차량 속도를 측정할 수 있습니다.");
       }
     }
     return _isLocationServiceEnabled &&
@@ -43,7 +43,6 @@ class SpeedometerProvider with ChangeNotifier {
     double speed = (position.speed) * 3.6;
     speedCar = speed;
     _speedometer.currentSpeed = speed;
-    print("current speed is : " + speed.toString());
     notifyListeners();
   }
 

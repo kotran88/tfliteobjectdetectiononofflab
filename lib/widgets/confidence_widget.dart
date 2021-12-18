@@ -36,7 +36,10 @@ class ConfidenceWidget extends StatelessWidget {
 
         var screenRatio = this.screenHeight / this.screenWidth;
         var previewRatio = this.previewHeight / this.previewWidth;
-
+        // print("screenratio");
+        // print(screenRatio);
+        // print(scaleWidth);
+        // print(scaleHeight);
         if (screenRatio > previewRatio) {
           scaleWidth = screenHeight / previewRatio;
           scaleHeight = screenHeight;
@@ -53,8 +56,8 @@ class ConfidenceWidget extends StatelessWidget {
         return Positioned(
             left: x - 15,
             top: y - heightAppBar,
-            width: 100,
-            height: 15,
+            width: 200,
+            height: 50,
             child: Row(children: <Widget>[
               Icon(Icons.api, size: AppFontSizes.small, color: AppColors.blue),
               Text(" ${k.part}",
@@ -127,9 +130,16 @@ class ConfidenceWidget extends StatelessWidget {
           h -= (difH / 2 - _y) * scaleHeight;
         }
       }
+      if(entity.detectedClass=="car"||entity.detectedClass=="truck"||entity.detectedClass=="bus"){
+
+      }else{
+        w=50.0;
+        h=15.0;
+      }
+
       return Positioned(
         left: max(0, x),
-        top: max(0, y),
+        top: max(0, y-50.0),
         width: w,
         height: h,
         child: Container(

@@ -6,7 +6,7 @@ import '/models/recognition.dart';
 class HomeViewState {
 
   ModelType type;
-
+  bool isRedtoGreenflag=false;
   late List<Recognition> recognitions = <Recognition>[];
 
   int widthImage = 0;
@@ -28,6 +28,15 @@ class HomeViewState {
 
   bool isYolo() {
     return type == ModelType.YOLO;
+  }
+
+  bool isRedtoGreen() {
+    print("handleswitch is..."+type.toString());
+    return type=="RedtoGreen";
+  }
+  bool isRedToRedLeft() {
+    print("handleswitch is..."+type.toString());
+    return  type=="RedtoRedLeft";
   }
 
   bool isSSDMobileNet() {

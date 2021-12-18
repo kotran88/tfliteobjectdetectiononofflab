@@ -4,15 +4,25 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite/tflite.dart';
 
-enum ModelType { YOLO, SSDMobileNet, MobileNet, PoseNet }
+enum ModelType { RedtoGreen,RedtoRedLeft, YOLO, SSDMobileNet, MobileNet, PoseNet }
+enum Modelboolean { RedtoGreen,RedtoRedLeft }
 
 class TensorFlowService {
   ModelType _type = ModelType.SSDMobileNet;
-
+  bool _isboolean=false;
   ModelType get type => _type;
 
   set type(type) {
     _type = type;
+  }
+
+
+
+  bool get redtogreen => _isboolean;
+
+  set redtogreen(type) {
+    print("handleswitch setting red to green to "+type.toString());
+    _isboolean = type;
   }
 
   loadModel(ModelType type) async {

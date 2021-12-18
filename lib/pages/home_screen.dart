@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as UI;
-
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -22,7 +24,7 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:ext_storage/ext_storage.dart';
 class HomeScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -125,6 +127,7 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
 
   Widget buildFloatingActionButton(BuildContext context) {
     return Container(
+
       padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -166,11 +169,14 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
   }
 
   handleSwitchSource(ModelType item) {
+    print("handleswitch source");
+    print("handleswitch"+item.toString());
+    print("handleswitchㅗㅗㅗㅗㅗ"+viewModel.state.isRedtoGreen().toString());
     viewModel.dispose();
-    viewModel.updateTypeTfLite(item);
-    Provider.of<NavigationService>(context, listen: false).pushReplacementNamed(
-        AppRoute.homeScreen,
-        args: {'isWithoutAnimation': true});
+    print("handleswitch result "+viewModel.updateRedtoGreen(true).toString() );
+    // Provider.of<NavigationService>(context, listen: false).pushReplacementNamed(
+    //     AppRoute.homeScreen,
+    //     args: {'isWithoutAnimation': true});
   }
 
   Future<bool> handleCaptureClick() async {
@@ -182,14 +188,72 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
 
     print("handleCaptureClick 13 ");
         // final cameraImage = await _cameraController.takePicture();
+    // try {
+    //   // Ensure that the camera is initialized.
+    //   // Attempt to take a picture and then get the location
+    //   // where the image file is saved.
+    //   final image = await _cameraController.takePicture();
 
-        try {
-      XFile file = await _cameraController.takePicture();
-      return file;
-    } on CameraException catch (e) {
-          print(e.toString()+"handleCaptureClick 144 ");
-      return null;
-    }
+    // print("handleCaptureClick done!!!!! ");
+    // print("handleCaptureClick image.path"+image.path.toString());
+    // } catch (e) {
+    //   print("error...");
+    //   // If an error occurs, log the error to the console.
+    //   print(e);
+    // }
+     var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+final directory = await getApplicationDocumentsDirectory();
+    // String imagesDirectory = directory + "/images/pets/";
+    print("directory"+directory.toString());
+    print("externalDirectoryPath directory"+externalDirectoryPath.toString());
+    // print(imagesDirectory);
+    var status = await Permission.storage.status;
+                  if (!status.isGranted) {
+                    await Permission.storage.request();
+                  }
+
+    new Directory(externalDirectoryPath +'/DCIM/Camera')
+    .create()
+    .then((Directory directory) 
+    {
+      print(directory.path);
+    });;
+    
+
+//      try {
+//             // Ensure that the camera is initialized.
+//             await _initializeControllerFuture;
+
+//     print("handleCaptureClick 14 ");
+//             // Attempt to take a picture and get the file `image`
+//             // where it was saved.
+//             final image = await _cameraController.takePicture();
+
+// print(image.path);
+//     print("handleCaptureClick 15 ");
+//             // If the picture was taken, display it on a new screen.
+//             // await Navigator.of(context).push(
+//             //   MaterialPageRoute(
+//             //     builder: (context) => DisplayPictureScreen(
+//             //       // Pass the automatically generated path to
+//             //       // the DisplayPictureScreen widget.
+//             //       print("image path is"+image.path);
+//             //       imagePath: image.path,
+//             //     ),
+//             //   ),
+//             // );
+//           } catch (e) {
+//             // If an error occurs, log the error to the console.
+//             print(e);
+//           }
+
+    //     try {
+    //   XFile file = await _cameraController.takePicture();
+    //   return file;
+    // } on CameraException catch (e) {
+    //       print(e.toString()+"handleCaptureClick 144 ");
+    //   return null;
+    // }
     print("handleCaptureClick 1455 ");
         // await renderedAndSaveImage(value, cameraImage);
       }
@@ -268,75 +332,41 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
         //       _gotoRepo();
         //     },
         //     icon: Icon(AppIcons.linkOption, semanticLabel: 'Repo')),
-        // PopupMenuButton<ModelType>(
-        //     onSelected: (item) => handleSwitchSource(item),
-        //     color: AppColors.white,
-        //     itemBuilder: (context) => [
-        //           PopupMenuItem(
-        //               enabled: !viewModel.state.isYolo(),
-        //               child: Row(
-        //                 children: <Widget>[
-        //                   Icon(Icons.api,
-        //                       color: !viewModel.state.isYolo()
-        //                           ? AppColors.black
-        //                           : AppColors.grey),
-        //                   Text(' YOLO',
-        //                       style: AppTextStyles.regularTextStyle(
-        //                           color: !viewModel.state.isYolo()
-        //                               ? AppColors.black
-        //                               : AppColors.grey)),
-        //                 ],
-        //               ),
-        //               value: ModelType.YOLO),
-        //           PopupMenuItem(
-        //               enabled: !viewModel.state.isSSDMobileNet(),
-        //               child: Row(
-        //                 children: <Widget>[
-        //                   Icon(Icons.api,
-        //                       color: !viewModel.state.isSSDMobileNet()
-        //                           ? AppColors.black
-        //                           : AppColors.grey),
-        //                   Text(' SSD MobileNet',
-        //                       style: AppTextStyles.regularTextStyle(
-        //                           color: !viewModel.state.isSSDMobileNet()
-        //                               ? AppColors.black
-        //                               : AppColors.grey)),
-        //                 ],
-        //               ),
-        //               value: ModelType.SSDMobileNet),
-        //           PopupMenuItem(
-        //               enabled: !viewModel.state.isMobileNet(),
-        //               child: Row(
-        //                 children: <Widget>[
-        //                   Icon(Icons.api,
-        //                       color: !viewModel.state.isMobileNet()
-        //                           ? AppColors.black
-        //                           : AppColors.grey),
-        //                   Text(' MobileNet',
-        //                       style: AppTextStyles.regularTextStyle(
-        //                           color: !viewModel.state.isMobileNet()
-        //                               ? AppColors.black
-        //                               : AppColors.grey)),
-        //                 ],
-        //               ),
-        //               value: ModelType.MobileNet),
-        //           PopupMenuItem(
-        //               enabled: !viewModel.state.isPoseNet(),
-        //               child: Row(
-        //                 children: <Widget>[
-        //                   Icon(Icons.api,
-        //                       color: !viewModel.state.isPoseNet()
-        //                           ? AppColors.black
-        //                           : AppColors.grey),
-        //                   Text(' PoseNet',
-        //                       style: AppTextStyles.regularTextStyle(
-        //                           color: !viewModel.state.isPoseNet()
-        //                               ? AppColors.black
-        //                               : AppColors.grey)),
-        //                 ],
-        //               ),
-        //               value: ModelType.PoseNet),
-        //         ]),
+        PopupMenuButton<ModelType>(
+            onSelected: (item) => handleSwitchSource(item),
+            color: AppColors.white,
+            itemBuilder: (context) => [
+                  PopupMenuItem(
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.api,
+                              color: viewModel.state.isRedtoGreen()
+                                  ? AppColors.black
+                                  : AppColors.grey),
+                          Text(' Red - > g ',
+                              style: AppTextStyles.regularTextStyle(
+                                  color: viewModel.state.isRedtoGreen()
+                                      ? AppColors.black
+                                      : AppColors.grey)),
+                        ],
+                      ),
+                      value: ModelType.RedtoGreen),
+                       PopupMenuItem(
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.api,
+                              color: viewModel.state.isRedToRedLeft()
+                                  ? AppColors.black
+                                  : AppColors.grey),
+                          Text('Red - > RedLeft',
+                              style: AppTextStyles.regularTextStyle(
+                                  color: viewModel.state.isRedToRedLeft()
+                                      ? AppColors.black
+                                      : AppColors.grey)),
+                        ],
+                      ),
+                      value: ModelType.RedtoRedLeft)
+                ]),
       ],
       backgroundColor: AppColors.blue,
       /*
@@ -504,19 +534,52 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
                       color: Colors.red,
                       child: Text(
                         value.getRecognitionsColor.toString() == ""
-                            ? "공백입니다."
+                            ? ""
                             : value.getRecognitionsColor.toString(),
                       ),
                     ),
 
-                    Container(
+                   if(value.currentColor==("redleft") )...[
+                         Container(
+                        child: Image.asset("assets/redleft.png")
+                         )
+                      ]else if(value.currentColor==("red") )...[
+                         Container(
+                        child: Image.asset("assets/red.png")
+                         )
+                      ]else if(value.currentColor=="green" ) ...[
+ Container(
+                        child: Image.asset("assets/green.png")
+                         )
+                      ]else ...[
+                         Container(
+                         )
+                      ],
+                      Container(
                       color: Colors.blue,
                       child: Text(
-                        value.getRecognitionsColor.toString() == ""
-                            ? "공백"
-                            : value.currentColor.toString(),
+                        value.cc.toString() == ""
+                            ? ""
+                            : value.cc.toString(),
                       ),
-                    ),
+                      ),
+                      Container(
+                      color: Colors.yellow ,
+                      child: Text(
+                        value.getboxSize.toString()
+                      ),
+                      ),
+                      Container(
+                      color: Colors.black ,
+                      child: Text(
+                        value.detectedCar.toString()
+                      ),
+                      )
+
+
+
+
+
                   ],
                 ),
               ),
