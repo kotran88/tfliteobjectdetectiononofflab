@@ -125,7 +125,7 @@ class TensorFlowService {
   Future<List<dynamic>?> runModelOnImage(File image) async {
     var recognitions = await Tflite.detectObjectOnImage(
         path: image.path,
-        model: "YOLO",
+        model: "SSDMobileNet",
         threshold: 0.3,
         imageMean: 0.0,
         imageStd: 127.5,

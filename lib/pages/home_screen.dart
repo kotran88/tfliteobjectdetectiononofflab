@@ -3,6 +3,11 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as UI;
 import 'dart:io';
+import 'package:metadata/metadata.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:exif/exif.dart';
+import 'package:flutter_realtime_object_detection/speed/providers/speedometer_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
@@ -41,6 +46,7 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
 
   late ScreenshotController screenshotController;
 
+  late TensorFlowService _tensorFlowService;
   late Uint8List _imageFile;
 
   TextEditingController searchController = TextEditingController();
@@ -93,7 +99,7 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
       await viewModel.runModel(image);
     }
   }
-
+  
   @override
   void dispose() {
     super.dispose();
@@ -179,15 +185,12 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     //     args: {'isWithoutAnimation': true});
   }
 
-  Future<bool> handleCaptureClick() async {
+  Future<bool> handleCaptureClick() async  {
     print("handleCaptureClick 1 ");
-    screenshotController.capture().then((value) async {
 
     print("handleCaptureClick 12 ");
-      if (value != null) {
 
     print("handleCaptureClick 13 ");
-        // final cameraImage = await _cameraController.takePicture();
     // try {
     //   // Ensure that the camera is initialized.
     //   // Attempt to take a picture and then get the location
@@ -202,23 +205,37 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     //   print(e);
     // }
      var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
-final directory = await getApplicationDocumentsDirectory();
-    // String imagesDirectory = directory + "/images/pets/";
-    print("directory"+directory.toString());
-    print("externalDirectoryPath directory"+externalDirectoryPath.toString());
-    // print(imagesDirectory);
-    var status = await Permission.storage.status;
-                  if (!status.isGranted) {
-                    await Permission.storage.request();
-                  }
-
+// final directory = await getApplicationDocumentsDirectory();
+//     // String imagesDirectory = directory + "/images/pets/";
+//     print("directory"+directory.toString());
+//     print("externalDirectoryPath directory"+externalDirectoryPath.toString());
+//     // print(imagesDirectory);
+//     var status = await Permission.storage.status;
+//                   if (!status.isGranted) {
+//                     await Permission.storage.request();
+//                   }
+print("directory is???"+externalDirectoryPath.toString());
+    print(externalDirectoryPath);
     new Directory(externalDirectoryPath +'/DCIM/Camera')
     .create()
     .then((Directory directory) 
     {
-      print(directory.path);
+      print("directory is.........."+directory.toString());
+      _fetchFiles(directory);
+      print("directory is!!!!!"+directory.path);
     });;
     
+
+//     var image = await ImagePicker.pickImage(source: ImageSource.camera);
+// var bytes = await image.readAsBytes();
+// var tags = await readExifFromBytes(bytes);
+// try {
+// }catch(e){
+//    print("noexif");
+// }finally{
+//   tags.forEach((key, value) {
+//   print({"$key":"$value"});
+// });
 
 //      try {
 //             // Ensure that the camera is initialized.
@@ -255,12 +272,94 @@ final directory = await getApplicationDocumentsDirectory();
     //   return null;
     // }
     print("handleCaptureClick 1455 ");
-        // await renderedAndSaveImage(value, cameraImage);
-      }
-    });
     return true;
+        // await renderedAndSaveImage(value, cameraImage);
+  }
+  _fetchFiles(Directory dir) async {
+    print("directory :fetch file come");
+    File file=new File('/storage/emulated/0/DCIM/Camera/20211218_234840.jpg');
+    print("directoryyy : 2222");
+      print("directoryyy done");
+//       // final exif =
+//       //       dd.FlutterExif.fromBytes( file.readAsBytesSync());
+      print("directoryyy : 3333");
+     final fileBytes = file.readAsBytesSync();
+
+     
+
+
+final data = await readExifFromBytes(fileBytes);
+
+  if (data.isEmpty) {
+    print("No EXIF information found");
+    return;
   }
 
+  for (final entry in data.entries) {
+    print("${entry.key}: ${entry.value}");
+  }
+
+
+
+    print(data);
+    // try {
+      
+    // Map<String, IfdTag> imgTags =  readExifFromBytes( file.readAsBytesSync() );
+    // print("directoryyy: 44444555444");
+    // print(imgTags);
+    // if (imgTags.containsKey('GPS GPSLongitude')) {
+    //   setState(() {
+    //     _imgHasLocation = true;
+    //     _imgLocation = exifGPSToGeoFirePoint(imgTags);
+    //   });
+    // }
+    // } catch (e) {
+    //   print("directoryyy error "+e.toString());
+    // }
+
+       
+    // List<dynamic> listImage = List<dynamic>();
+//     dir.list().forEach((element) {
+//       print("directoryyy11 "+element.toString());
+//       String splited=element.toString().split(" '")[1].split("'")[0];
+//       //'/storage/emulated/0/DCIM/Camera/20161125_192033.jpg'
+//          print("directoryyy22"+splited);
+//       File file=new File(splited);
+//       print("directoryyy33 done");
+
+ 
+//       print("directoryyy44 : 33334444");
+// // for (final entry in data) {
+// //       print("${entry.key}: ${entry.value}");
+// //     }
+// // Map<String, String> mTags = HashMap();
+//   });
+  }
+
+  detectObject(File image) async {
+      var recognitions =
+            await this._tensorFlowService.runModelOnImage(image);
+    // var recognitions = await Tflite.detectObjectOnImage(
+    //   path: image.path,       // required
+    //   model: "SSDMobileNet",
+    //   imageMean: 127.5,     
+    //   imageStd: 127.5,      
+    //   threshold: 0.4,       // defaults to 0.1
+    //   numResultsPerClass: 10,// defaults to 5
+    //   asynch: true          // defaults to true
+    // );
+    // FileImage(image)
+    //     .resolve(ImageConfiguration())
+    //     .addListener((ImageStreamListener((ImageInfo info, bool _) {
+    //       setState(() {
+    //         _imageWidth = info.image.width.toDouble();
+    //         _imageHeight = info.image.height.toDouble();
+    //       });
+    //     }))); 
+    // setState(() {
+    //   _recognitions = recognitions;
+    // });
+  }
   Future<bool> renderedAndSaveImage(Uint8List draw, XFile camera) async {
     UI.Image cameraImage =
         await decodeImageFromList(await camera.readAsBytes());
