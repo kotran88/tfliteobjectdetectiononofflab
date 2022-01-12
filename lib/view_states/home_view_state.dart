@@ -1,5 +1,5 @@
 
-import 'package:flutter_realtime_object_detection/services/tensorflow_service.dart';
+import 'package:trafficawareness/services/tensorflow_service.dart';
 
 import '/models/recognition.dart';
 

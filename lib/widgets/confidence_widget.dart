@@ -1,10 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_object_detection/app/app_resources.dart';
-import 'package:flutter_realtime_object_detection/models/recognition.dart';
-import 'package:flutter_realtime_object_detection/services/tensorflow_service.dart';
+import 'package:trafficawareness/app/app_resources.dart';
+import 'package:trafficawareness/models/recognition.dart';
+import 'package:trafficawareness/services/tensorflow_service.dart';
 
+import 'package:trafficawareness/speed/providers/speedometer_provider.dart';
 class ConfidenceWidget extends StatelessWidget {
   final List<Recognition> entities;
   final int previewWidth;
@@ -97,7 +98,10 @@ class ConfidenceWidget extends StatelessWidget {
 
   List<Widget> _renderHeightLineEntities() {
     List<Widget> results = <Widget>[];
-    results = this.entities.map((entity) {
+
+if(SpeedometerProvider.speedCar < 1){
+
+   results = this.entities.map((entity) {
       var _x = entity.rect!.x;
       var _y = entity.rect!.y;
       var _w = entity.rect!.w;
@@ -130,14 +134,11 @@ class ConfidenceWidget extends StatelessWidget {
           h -= (difH / 2 - _y) * scaleHeight;
         }
       }
-      if(entity.detectedClass=="car"||entity.detectedClass=="truck"||entity.detectedClass=="bus"){
-
-      }else{
-        w=50.0;
-        h=15.0;
-      }
-
-      return Positioned(
+      if(entity.detectedClass=="car"||entity.detectedClass=="truck"||entity.detectedClass=="bus"||entity.detectedClass=="motor"){
+        print("render size!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        print(max(0,x));
+        print(max(0,y-50.0));
+            return Positioned(
         left: max(0, x),
         top: max(0, y-50.0),
         width: w,
@@ -147,17 +148,44 @@ class ConfidenceWidget extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border.all(color: Colors.red, width: 2.0),
           ),
-          child: Text(
-            '${entity.detectedClass ?? ''} ${((entity.confidenceInClass ?? 0) * 100).toStringAsFixed(0)}%',
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.regularTextStyle(
-                color: Colors.red,
-                fontSize: AppFontSizes.extraExtraSmall,
-                backgroundColor: AppColors.white),
-          ),
+          // child: Text(
+          //   '${entity.detectedClass ?? ''} ${((entity.confidenceInClass ?? 0) * 100).toStringAsFixed(0)}%',
+          //   overflow: TextOverflow.ellipsis,
+          //   style: AppTextStyles.regularTextStyle(
+          //       color: Colors.red,
+          //       fontSize: AppFontSizes.extraExtraSmall,
+          //       backgroundColor: AppColors.white),
+          // ),
         ),
       );
+
+// print("render position "+max(0,x).toString()+"///"+max(0,y-50.0).toString());
+      }else{
+        // w=50.0;
+        // h=15.0;
+
+            return Positioned(
+        left: max(0, x),
+        top: max(0, y-50.0),
+        width: w+1,
+        height: h+1,
+        child: Container(
+          padding: EdgeInsets.all(0.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.red, width: 2.0),
+          )
+        ),
+      );
+      }
+
+  
     }).toList();
+
+    
+}else{
+
+}
+   
     return results;
   }
 

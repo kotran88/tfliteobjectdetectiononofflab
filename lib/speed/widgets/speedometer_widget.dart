@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_object_detection/speed/providers/speedometer_provider.dart';
+import 'package:trafficawareness/speed/providers/speedometer_provider.dart';
 import 'package:segment_display/segment_display.dart';
 import 'package:provider/provider.dart';
 

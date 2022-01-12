@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_realtime_object_detection/app/app_resources.dart';
-import 'package:flutter_realtime_object_detection/app/app_router.dart';
-import 'package:flutter_realtime_object_detection/services/navigation_service.dart';
+import 'package:trafficawareness/app/app_resources.dart';
+import 'package:trafficawareness/app/app_router.dart';
+import 'package:trafficawareness/services/navigation_service.dart';
 import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
       child: ScaleTransition(
         scale: _animation,
         alignment: Alignment.center,
-        child: Image(image: AssetImage('assets/images/logo.png')),
+        child: Image(image: AssetImage('assets/images/logo2.png')),
       ),
     );
   }

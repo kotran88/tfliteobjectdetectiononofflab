@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_object_detection/speed/utils/utils_methods.dart';
+import 'package:trafficawareness/speed/utils/utils_methods.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/speedometer_model.dart';
 import 'package:location/location.dart' hide LocationAccuracy;

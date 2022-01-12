@@ -3,33 +3,51 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as UI;
 import 'dart:io';
-import 'package:metadata/metadata.dart';
+import 'package:screen/screen.dart';
+import 'dart:collection';
+import 'dart:math';
+import 'dart:async';
+import 'package:wakelock/wakelock.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:restart_app/restart_app.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:share/share.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:ext_storage/ext_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:exif/exif.dart';
-import 'package:flutter_realtime_object_detection/speed/providers/speedometer_provider.dart';
+import 'package:trafficawareness/speed/providers/speedometer_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_realtime_object_detection/app/app_resources.dart';
-import 'package:flutter_realtime_object_detection/app/app_router.dart';
-import 'package:flutter_realtime_object_detection/app/base/base_stateful.dart';
-import 'package:flutter_realtime_object_detection/main.dart';
-import 'package:flutter_realtime_object_detection/services/navigation_service.dart';
-import 'package:flutter_realtime_object_detection/services/tensorflow_service.dart';
-import 'package:flutter_realtime_object_detection/speed/Body.dart';
-import 'package:flutter_realtime_object_detection/view_models/home_view_model.dart';
-import 'package:flutter_realtime_object_detection/widgets/aperture/aperture_widget.dart';
-import 'package:flutter_realtime_object_detection/widgets/confidence_widget.dart';
+import 'package:trafficawareness/app/app_resources.dart';
+import 'package:trafficawareness/app/app_router.dart';
+import 'package:trafficawareness/app/base/base_stateful.dart';
+import 'package:trafficawareness/main.dart';
+import 'package:trafficawareness/services/navigation_service.dart';
+import 'package:trafficawareness/services/tensorflow_service.dart';
+import 'package:trafficawareness/speed/Body.dart';
+import 'package:trafficawareness/view_models/home_view_model.dart';
+import 'package:trafficawareness/widgets/aperture/aperture_widget.dart';
+import 'package:trafficawareness/widgets/confidence_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:ext_storage/ext_storage.dart';
+import 'package:download_assets/download_assets.dart';
+
+
+enum SingingCharacter { screenon, screenoff }
+enum SingingCharacterSleep { sleepon, sleepoff }
+
 class HomeScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -39,41 +57,271 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     with WidgetsBindingObserver {
+      SingingCharacter? _character;
+      SingingCharacterSleep? _character_sleep;
+
+bool sleepflag=false;
+  ListQueue<double> speedarray = ListQueue<double>();
+  DownloadAssetsController downloadAssetsController = DownloadAssetsController();
+  String message = "Press the download button to start the download";
+  bool downloaded = false;
   late CameraController _cameraController;
+  late CameraController _cameraController2;
   late Future<void> _initializeControllerFuture;
-
+  late Future<void> _initializeControllerFuture2;
+  int refreshcount=0;
   late StreamController<Map> apertureController;
+  double fv=0;
+  double sv=0;
+  double tv=0;
+  double ffv=0;
+  int countposible=0;
+  double fffv=0;
+  double ssv=0;
+  double sssv=0;
+  double ev=0;
+  double nv=0;
+  double ttv=0;
+  int cameraType=0;
 
+bool videorecordflag=false;
   late ScreenshotController screenshotController;
 
   late TensorFlowService _tensorFlowService;
   late Uint8List _imageFile;
-
+String? token;
+String? token_sleep;
   TextEditingController searchController = TextEditingController();
-
+  bool captureflag=false;
   @override
   bool get wantKeepAlive => true;
-
+ 
   @override
   void afterFirstBuild(BuildContext context) {
     super.afterFirstBuild(context);
     WidgetsBinding.instance?.addObserver(this);
   }
+   Future changeddetect(flag) async {
+     print("wake ${flag}");
+     final prefs = await SharedPreferences.getInstance();
+     if(flag=="on"){
 
+     Wakelock.enable();
+    prefs.setString('screen', "on");
+     }else{
+
+     Wakelock.disable();
+    prefs.setString('screen', "off");
+     }
+   }
+      Future changeddetect2(flag) async {
+     print("sleeppp ${flag}");
+     final prefs = await SharedPreferences.getInstance();
+     if(flag=="on"){
+        token_sleep="on";
+    prefs.setString('sleep', "on");
+     }else{
+
+        token_sleep="off";
+    prefs.setString('sleep', "off");
+     }
+   }
+ Future _init() async {
+
+
+   try{
+print("!!!!init!!!!${viewModel.state.cameraIndex}");
+//  _cameraController2 = CameraController(
+//         cameras[2], ResolutionPreset.high);
+
+//        _cameraController2.initialize().then((_) {
+
+// print("!!!!init22222!!!!");
+//     }); 
+   } catch(e){
+     print("!!!init${e}");
+   }
+
+    await downloadAssetsController.init();
+    final prefs = await SharedPreferences.getInstance();
+     token = prefs.getString('screen');
+     token_sleep = prefs.getString('sleep');
+    print("wakeup${token}");
+    print("sleep token${token_sleep}");
+    if(token==null){
+      token="on";
+    }
+    if(token=="on"){
+
+ _character = SingingCharacter.screenon;
+     Wakelock.enable();
+     }else{
+
+ _character = SingingCharacter.screenoff;
+     Wakelock.disable();
+     }
+
+     if(token_sleep==null){
+      token_sleep="on";
+    }
+    if(token_sleep=="on"){
+
+ _character_sleep = SingingCharacterSleep.sleepon;
+     }else{
+
+ _character_sleep = SingingCharacterSleep.sleepoff;
+     }
+
+  
+    downloaded = await downloadAssetsController.assetsDirAlreadyExists();
+        print("render..."+downloaded.toString());
+    
+bool filedownloaded = await downloadAssetsController.assetsFileExists("ble.jpeg");
+print(downloadAssetsController.assetsDir.toString()+"render... ddownload asset come"+filedownloaded.toString());
+
+bool filedownloaded2 = await downloadAssetsController.assetsFileExists("quantized.tflite");
+print("render... ddownload asset comeeeeee"+filedownloaded2.toString());
+try {
+  
+File f=File("${downloadAssetsController.assetsDir}/jkj.jpeg");
+print("render... f"+f.toString());
+} catch (e) {
+  print("render... er file : "+e.toString());
+}
+
+  }
   @override
   void initState() {
     super.initState();
-    loadModel(viewModel.state.type);
-    initCamera();
+    _init();
 
+    loadModel(viewModel.state.type);
+ 
+    initCamera();
+// _pickVideo=ImagePicker.pickVideo(source: ImageSource.camera);
     apertureController = StreamController<Map>.broadcast();
     screenshotController = ScreenshotController();
-  }
 
-  void initCamera() {
+
+
+    Timer.periodic(new Duration(seconds: 60*60*2), (timer) {
+
+
+            Fluttertoast.showToast(
+                        msg: "두시간에 한번씩 리스타트 합니다. ",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                      );
+ Restart.restartApp();
+    });
+    Timer.periodic(new Duration(seconds: 20), (timer) {
+   debugPrint(timer.tick.toString());
+   print(speedarray.toString()+"render tttriggered for 11111min");
+   speedarray.add(SpeedometerProvider.speedCar);
+   if(sleepflag&&SpeedometerProvider.speedCar>10){
+
+
+                    initCamera();
+        Screen.setBrightness(5);
+                    sleepflag=false;
+                    
+        }
+   if(speedarray.length>10){
+     speedarray.removeFirst();
+      speedarray.forEach((element) {
+ countposible++;
+
+  if (countposible == 1) {
+            fv = element;
+          }
+          if (countposible == 2) {
+            sv = element;
+          }
+          if (countposible == 3) {
+            tv = element;
+          }
+          if (countposible == 4) {
+            ffv = element;
+          }
+          if (countposible == 5) {
+            fffv = element;
+          }
+
+
+          if (countposible == 6) {
+            ssv = element;
+          }
+          if (countposible == 7) {
+            sssv = element;
+          }
+          if (countposible == 8) {
+            ev = element;
+          }
+          if (countposible == 9) {
+            nv = element;
+          }
+          if (countposible == 10) {
+            ttv = element;
+
+            String mv=( (fv+sv+tv+ffv+fffv+ssv+sssv+ev+nv+ttv) /10 ).toString();
+
+      if( (fv+sv+tv+ffv+fffv+ssv+sssv+ev+nv+ttv) /10 <1){
+        //go to sleep mode
+        if(token_sleep=="on"){
+          if(!sleepflag){
+Fluttertoast.showToast(
+            msg: "휴대전화의 배터리 보호를 위해 슬립모드로 전환합니다. !"+mv,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        sleepflag=true;
+        Screen.setBrightness(0);
+
+// initCamera();
+       _cameraController.dispose();
+          }
+       
+        }else{
+
+        }
+
+      }else{
+        
+        
+
+      }
+
+ //judge finish so initialized....
+          }
+      });
+      countposible=0;
+      speedarray.clear();
+
+   }
+  refreshcount=refreshcount+1;
+
+        // handleSwitchCameraClick();
+
+          return;
+
+
+});
+  }
+ void initCameraNormal()  {
+   print("renderrr"+cameras[viewModel.state.cameraIndex].toString());
     _cameraController = CameraController(
-        cameras[viewModel.state.cameraIndex], ResolutionPreset.high);
+        cameras[cameraType], ResolutionPreset.high);
     _initializeControllerFuture = _cameraController.initialize().then((_) {
+
+      print("renderedandsaveim initialized done");
       if (!mounted) {
         return;
       }
@@ -81,21 +329,167 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
 
       /// TODO: Run Model
       setState(() {});
-      _cameraController.startImageStream((image) async {
+//       if(!captureflag){
+// _cameraController.startImageStream((image) async {
+//         if (!mounted) {
+//           return;
+//         }
+//         await viewModel.runModel(image);
+//       });
+//       }
+      
+    });
+  }
+
+//   void initCameraRemote()  {
+//    print("renderrr"+cameras[2].toString());
+//     _cameraController = CameraController(
+//         cameras[cameraType], ResolutionPreset.high);
+//     _initializeControllerFuture = _cameraController.initialize().then((_) {
+
+//       print("renderedandsaveim initialized done");
+//       if (!mounted) {
+//         return;
+//       }
+//       _cameraController.setFlashMode(FlashMode.off);
+
+//       /// TODO: Run Model
+//       setState(() {});
+// //       if(!captureflag){
+// _cameraController.startImageStream((image) async {
+//         if (!mounted) {
+//           return;
+//         }
+//         await viewModel.runModel(image);
+//       });
+//       }
+      
+//     });
+//   }
+
+  void recordstarting() {
+    print("render init cameracome1");
+
+ _cameraController = CameraController(
+        cameras[cameraType], ResolutionPreset.high);
+
+  
+    if(_cameraController!=null){
+
+    print("render init cameracome is not null"+_cameraController.toString());
+    }else{
+
+    print("renderrrrrr init cameracome is  null");
+    }
+
+
+   try {
+     print("renderrrrrrr init initialize come"+mounted.toString());
+
+           _initializeControllerFuture = _cameraController.initialize().then((_) {
+
+      print("renderrrrrrr init  initialized done");
+      _cameraController.setFlashMode(FlashMode.off);
+
+      /// TODO: Run Model
+      setState(() {});
+//       if(!captureflag){
+  // _cameraController.
+_cameraController.startVideoRecording();
+
+      print("renderrrrrrr startVideoRecording");
+_cameraController.startImageStream((image) async {
         if (!mounted) {
           return;
         }
         await viewModel.runModel(image);
       });
-    });
-  }
+//       }
+      
+    }); 
+   } catch (e) {
+     print("render init error is :"+e.toString());
+   }
+
+
+      
+    }
+  void initCamera() {
+    print("render init cameracome1");
+
+ _cameraController = CameraController(
+        cameras[cameraType], ResolutionPreset.high);
+
+  
+//  _cameraController2= CameraController(
+//         cameras[cameraType], ResolutionPreset.high);
+
+    if(_cameraController!=null){
+
+    print("render init cameracome is not null"+_cameraController.toString());
+    }else{
+
+    print("render init cameracome is  null");
+    }
+
+
+    // if(_cameraController2!=null){
+
+    // print("render init cameracome2222 is not null"+_cameraController2.toString());
+    // }else{
+
+    // print("render init cameracome2222 is  null");
+    // }
+   try {
+     print("render init initialize come"+mounted.toString());
+
+
+
+
+           _initializeControllerFuture = _cameraController.initialize().then((_) {
+
+      print("render init  initialized done");
+      if (!mounted) {
+        return;
+      }
+      _cameraController.setFlashMode(FlashMode.off);
+
+      /// TODO: Run Model
+      setState(() {});
+//       if(!captureflag){
+  _cameraController.startVideoRecording();
+
+      print("render init  startVideoRecording done");
+_cameraController.startImageStream((image) async {
+        if (!mounted) {
+          return;
+        }
+        await viewModel.runModel(image);
+      });
+//       }
+      
+    }); 
+   } catch (e) {
+     print("render init error is :"+e.toString());
+   }
+
+
+      
+    }
 
   void loadModel(ModelType type) async {
     await viewModel.loadModel(type);
   }
-
+   void loadModelagain(ModelType type) async {
+    await viewModel.loadModelagain(type);
+  }
+  void loadModell(DownloadAssetsController dc) async {
+    print("render...loadmodel done");
+    await viewModel.loadModela(dc);
+  }
   Future<void> runModel(CameraImage image) async {
     if (mounted) {
+      print("render... runmodel started");
       await viewModel.runModel(image);
     }
   }
@@ -111,12 +505,14 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
+ print("render didchange"+state.toString());
     /// TODO: Check Camera
     if (!_cameraController.value.isInitialized) return;
     if (state == AppLifecycleState.inactive) {
-      // _cameraController.dispose();
+      print("render didchange inactive!");
+      _cameraController.dispose();
     } else {
+      print("render didchange initCamera come");
       initCamera();
     }
   }
@@ -127,6 +523,104 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
         extendBodyBehindAppBar: false,
         appBar: buildAppBarWidget(context),
         body: buildBodyWidget(context),
+        drawer: Drawer(
+        // Add a ListView to the drawer. This ensures the user can scroll
+        // through the options in the drawer if there isn't enough vertical
+        // space to fit everything.
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text('Version 0.1'),
+            ),
+            ListTile(
+              title: const Text('화면 켜짐 지속 여부'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                // Navigator.pop(context);
+              },
+            ),
+              RadioListTile<SingingCharacter>(
+          title: const Text('화면 계속 켜짐 유지'),
+          value: SingingCharacter.screenon,
+          groupValue: _character,
+          onChanged: (SingingCharacter? value) {
+            setState(() {
+              changeddetect("on");
+              
+              print("ccccchange ${value}");
+              // prefs.setString('screen', "on");
+              _character = value;
+            });
+          },
+        ),
+         RadioListTile<SingingCharacter>(
+          title: const Text('화면 켜짐 유지 안함'),
+          value: SingingCharacter.screenoff,
+          groupValue: _character,
+          onChanged: (SingingCharacter? value) {
+            setState(() {
+
+              changeddetect("off");
+              // prefs.setString('screen', "off");
+              print("ccccchange ${value}");
+              Wakelock.disable();
+              _character = value;
+            });
+          },
+        ),
+
+
+
+
+
+
+ ListTile(
+              title: const Text('슬립 전환 여부'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                // Navigator.pop(context);
+              },
+            ),
+              RadioListTile<SingingCharacterSleep>(
+          title: const Text('슬립 전환 켜기'),
+          value: SingingCharacterSleep.sleepon,
+          groupValue: _character_sleep,
+          onChanged: (SingingCharacterSleep? value) {
+            setState(() {
+              changeddetect2("on");
+              
+              print("ccccchange ${value}");
+              // prefs.setString('screen', "on");
+              _character_sleep = value;
+            });
+          },
+        ),
+         RadioListTile<SingingCharacterSleep>(
+          title: const Text('슬립 전환 끄기'),
+          value: SingingCharacterSleep.sleepoff,
+          groupValue: _character_sleep,
+          onChanged: (SingingCharacterSleep? value) {
+            setState(() {
+
+              changeddetect2("off");
+              // prefs.setString('screen', "off");
+              print("ccccchange ${value}");
+              _character_sleep = value;
+            });
+          },
+        ),
+          ],
+        ),
+      ),
         floatingActionButton: buildFloatingActionButton(context),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat);
   }
@@ -134,7 +628,8 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
   Widget buildFloatingActionButton(BuildContext context) {
     return Container(
 
-      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10.0),
+ margin:EdgeInsets.fromLTRB(10,0,0,10),
+      padding: EdgeInsets.symmetric(vertical: 2, horizontal: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
@@ -143,20 +638,19 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
             onPressed: handleCaptureClick,
             tooltip: "Capture",
             backgroundColor: AppColors.white,
+           
             child: Icon(
-              Icons.cut_outlined,
+              Icons.send,
               color: AppColors.blue,
             ),
           ),
           FloatingActionButton(
             heroTag: null,
-            onPressed: handleSwitchCameraClick,
+            onPressed: videorecordingflag,
             tooltip: "Switch Camera",
             backgroundColor: AppColors.white,
             child: Icon(
-              viewModel.state.isBackCamera()
-                  ? Icons.camera_front
-                  : Icons.camera_rear,
+              Icons.restart_alt,
               color: AppColors.blue,
             ),
           ),
@@ -164,13 +658,183 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
       ),
     );
   }
-
+//refresh camera and model ! 
   Future<bool> handleSwitchCameraClick() async {
-    apertureController.sink.add({});
-    // viewModel.switchCamera();
+    // apertureController.sink.add({});
+    // // viewModel.switchCamera();
 
-    viewModel.startLocation();
-    initCamera();
+      print("render 111handleSwitchCameraClick initCamera come");
+    // viewModel.startLocation();
+    // initCamera();
+    //  WidgetsBinding.instance?.removeObserver(this);
+    // viewModel.close();
+    // apertureController.close();
+
+// _cameraController.dispose();
+try {
+  // loadModelagain(viewModel.state.type);
+
+      print("render 222handleSwitchCameraClick initCamera come");
+    // initCamera();
+
+} catch (e) {
+  print("render error ${e}");
+}
+ 
+
+      // initCamera();
+
+      print("render 333handleSwitchCameraClick initCamera come");
+
+// _pickVideo=ImagePicker.pickVideo(source: ImageSource.camera);
+    // apertureController = StreamController<Map>.broadcast();
+    //   print("render 444handleSwitchCameraClick initCamera come");
+
+    // screenshotController = ScreenshotController();
+    //   print("render 555handleSwitchCameraClick initCamera come");
+
+//  _cameraController.dispose();
+//       initCamera();
+// XFile videoFile = await _cameraController.stopVideoRecording();
+//       print("renderrr path is "+videoFile.path.toString());
+
+//       await GallerySaver.saveVideo(videoFile.path);
+// File(videoFile.path).deleteSync();
+
+    if(!videorecordflag){
+//         print("rrrenderrr start ");
+// final Directory appDirectory = await getApplicationDocumentsDirectory();
+//       final String videoDirectory = '${appDirectory.path}/Videos';
+//       await Directory(videoDirectory).create(recursive: true);
+//       final String currentTime = DateTime.now().millisecondsSinceEpoch.toString();
+//       final String filePath = '$videoDirectory/${currentTime}.mp4';
+  
+//         print("rrrenderrr start"+currentTime+"renderrrrr"+filePath.toString());
+//       try {
+      
+//         await _cameraController2.startVideoRecording();
+//         print("renerrrr startvideo recording...");
+//         // videoPath = filePath;
+//       } on CameraException catch (e) {
+//         print("renderrrrr"+e.toString());
+//         // _showCameraException(e);
+    
+//       }
+cameraType=2;
+      initCamera();
+      videorecordflag=true;
+    }else{
+      cameraType=0;
+      initCamera();
+//       print("rrrenderrr stop ");
+videorecordflag=false;
+// XFile videoFile = await _cameraController2.stopVideoRecording();
+//       print("renderrr path is "+videoFile.path.toString());
+
+//       await GallerySaver.saveVideo(videoFile.path);
+// File(videoFile.path).deleteSync();
+    }
+ 
+  
+
+    // _pickVideo=ImagePicker.pickVideo(source: ImageSource.camera,maxDuration: Duration(seconds:10));
+
+    return true;
+  }
+
+
+
+
+
+  Future<bool> videorecordingflag() async {
+   
+           Fluttertoast.showToast(
+          msg: "녹화 끝 !",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+
+      print("render init  stopVideoRecording starterd");
+      XFile videoFile = await _cameraController.stopVideoRecording();
+            print("render init  stopVideoRecording done");
+      print("renderrr path is "+videoFile.path.toString());
+
+      await GallerySaver.saveVideo(videoFile.path);
+File(videoFile.path).deleteSync();
+
+//     if(!videorecordflag){
+// //         print("rrrenderrr start ");
+// // final Directory appDirectory = await getApplicationDocumentsDirectory();
+// //       final String videoDirectory = '${appDirectory.path}/Videos';
+// //       await Directory(videoDirectory).create(recursive: true);
+// //       final String currentTime = DateTime.now().millisecondsSinceEpoch.toString();
+// //       final String filePath = '$videoDirectory/${currentTime}.mp4';
+  
+// //         print("rrrenderrr start"+currentTime+"renderrrrr"+filePath.toString());
+// //       try {
+      
+// //         await _cameraController2.startVideoRecording();
+// //         print("renerrrr startvideo recording...");
+// //         // videoPath = filePath;
+// //       } on CameraException catch (e) {
+// //         print("renderrrrr"+e.toString());
+// //         // _showCameraException(e);
+    
+// //       }
+// _cameraController.stopImageStream();
+// recordstarting();
+//      Fluttertoast.showToast(
+//           msg: "녹화 시작!",
+//           toastLength: Toast.LENGTH_SHORT,
+//           gravity: ToastGravity.CENTER,
+//           timeInSecForIosWeb: 1,
+//           backgroundColor: Colors.red,
+//           textColor: Colors.white,
+//           fontSize: 16.0
+//       );
+// // _cameraController.startVideoRecording();
+// // _cameraController.startImageStream((image) async {
+// //         if (!mounted) {
+// //           return;
+// //         }
+// //         await viewModel.runModel(image);
+// //       });
+
+//       videorecordflag=true;
+//     }else{
+//            Fluttertoast.showToast(
+//           msg: "녹화 끝 !",
+//           toastLength: Toast.LENGTH_SHORT,
+//           gravity: ToastGravity.CENTER,
+//           timeInSecForIosWeb: 1,
+//           backgroundColor: Colors.red,
+//           textColor: Colors.white,
+//           fontSize: 16.0
+//       );
+
+//       XFile videoFile = await _cameraController.stopVideoRecording();
+//       print("renderrr path is "+videoFile.path.toString());
+
+//       await GallerySaver.saveVideo(videoFile.path);
+// File(videoFile.path).deleteSync();
+
+
+// //       print("rrrenderrr stop ");
+// videorecordflag=false;
+// // XFile videoFile = await _cameraController2.stopVideoRecording();
+// //       print("renderrr path is "+videoFile.path.toString());
+
+// //       await GallerySaver.saveVideo(videoFile.path);
+// // File(videoFile.path).deleteSync();
+//     }
+ 
+  
+
+
     return true;
   }
 
@@ -185,10 +849,100 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     //     args: {'isWithoutAnimation': true});
   }
 
+double? gpsValuesToFloat(IfdValues? values) {
+  if (values == null || values is! IfdRatios) {
+    return null;
+  }
+
+  double sum = 0.0;
+  double unit = 1.0;
+
+  for (final v in values.ratios) {
+    sum += v.toDouble() * unit;
+    unit /= 60.0;
+  }
+
+  return sum;
+}
+Future<void> getUserOrder() {
+  // Imagine that this function is fetching user info from another service or database
+  return Future.delayed( Duration(seconds: 1), () => 
+  {
+    screenshotController.capture().then((value) async {
+        print("handleCaptureClick 1455666 ");
+      if (value != null) {
+        print("renderedandsaveimage111 1455777 "+captureflag.toString());
+      try {
+          final cameraImage = await _cameraController.takePicture();
+          print("renderedandsaveimagee 222222332111 ");
+          await renderedAndSaveImage(value, cameraImage);
+      } catch (e) {
+        print("renderedandsaveimageee"+e.toString());
+      }
+        print("renderedandsaveimage33eeee 14557778888 ");
+      }
+    })
+
+  });
+  
+  
+  
+
+
+}
   Future<bool> handleCaptureClick() async  {
-    print("handleCaptureClick 1 ");
+//     await _cameraController.dispose();
+// if(SpeedometerProvider.speedCar < 1){
+
+initCameraNormal();
+  getUserOrder();
+// }else{
+//    handleSwitchCameraClick();
+// }
+
+    print("renderedandsaveimag handleCaptureClick 1 ");
 
     print("handleCaptureClick 12 ");
+captureflag=true;
+//  final fileBytes = File('/storage/emulated/0/DCIM/Camera/20211218_234840.jpg').readAsBytesSync();
+//   final data =  await readExifFromBytes(fileBytes);
+//   print("renderedandsaveimag gogo");
+//    if (data.isEmpty) {
+//     print("No EXIF information found");
+//   }
+// /var/mobile/Containers/Data/Application/D2752D62-AA06-4D4D-8166-E1F5A8045DA7/Documents/camera/pictures/CAP_BB18FB69-6C3A-4202-8DE8-CC577B905C52.jpg
+///var/mobile/Containers/Data/Application/4AA0F63E-8B8E-49A1-9294-1366F0280D45/Documents
+  // for (final entry in data.entries) {
+  //   print("renderedandsaveimag ${entry.key}: ${entry.value}");
+  // }
+
+  //  final latRef = data['GPS GPSLatitudeRef']?.toString();
+  //   var latVal = gpsValuesToFloat(data['GPS GPSLatitude']?.values);
+  //   final lngRef = data['GPS GPSLongitudeRef']?.toString();
+  //   var lngVal = gpsValuesToFloat(data['GPS GPSLongitude']?.values);
+
+  //   if (latRef == null || latVal == null || lngRef == null || lngVal == null) {
+  //     print("renderedandsaveimag GPS information not found");
+  //   }
+
+  //   if (latRef == 'S') {
+  //   }
+
+  //   if (lngRef == 'W') {
+  //   }
+
+  //   print("renderedandsaveimag lat = $latVal");
+  //   print("renderedandsaveimag lng = $lngVal");
+// print(data);
+//   if (data.isEmpty) {
+//     print("No EXIF information found");
+//     return;
+//   }
+
+//   for (final entry in data.entries) {
+//     print("${entry.key}: ${entry.value}");
+//   }
+
 
     print("handleCaptureClick 13 ");
     // try {
@@ -204,7 +958,7 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
     //   // If an error occurs, log the error to the console.
     //   print(e);
     // }
-     var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+    //  var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
 // final directory = await getApplicationDocumentsDirectory();
 //     // String imagesDirectory = directory + "/images/pets/";
 //     print("directory"+directory.toString());
@@ -214,16 +968,18 @@ class _HomeScreenState extends BaseStateful<HomeScreen, HomeViewModel>
 //                   if (!status.isGranted) {
 //                     await Permission.storage.request();
 //                   }
-print("directory is???"+externalDirectoryPath.toString());
-    print(externalDirectoryPath);
-    new Directory(externalDirectoryPath +'/DCIM/Camera')
-    .create()
-    .then((Directory directory) 
-    {
-      print("directory is.........."+directory.toString());
-      _fetchFiles(directory);
-      print("directory is!!!!!"+directory.path);
-    });;
+var externalDir;
+externalDir = await getApplicationDocumentsDirectory();
+print("directory is extdir : "+externalDir.toString());
+//     // print(externalDirectoryPath);
+//     new Directory(externalDirectoryPath +'/DCIM/Camera')
+//     .create()
+//     .then((Directory directory) 
+//     {
+//       print("directory is.........."+directory.toString());
+//       _fetchFiles(directory);
+//       print("directory is!!!!!"+directory.path);
+//     });;
     
 
 //     var image = await ImagePicker.pickImage(source: ImageSource.camera);
@@ -272,9 +1028,47 @@ print("directory is???"+externalDirectoryPath.toString());
     //   return null;
     // }
     print("handleCaptureClick 1455 ");
+
+
+//      var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+// final directory = (await getApplicationDocumentsDirectory ()).path; //from path_provide package
+
+//     print("handleCaptureClick 145522 ");
+// String fileName = "abc.png";
+//  new Directory(externalDirectoryPath +'/DCIM/CCd')
+//     .create()
+//     .then((Directory directory) 
+//     {
+
+//         final cameraImage =  _cameraController.takePicture();
+//       print("directory isisisisis.........."+directory.toString());
+//       // _fetchFiles(directory);
+//       screenshotController.captureAndSave(
+//     '/storage/emulated/0/DCIM/CCd', //set path where screenshot will be saved
+//     fileName:fileName 
+// );
+//       print("directory is!!!!!"+directory.path);
+//     });;
+
+    // await screenshotController.capture(delay: const Duration(milliseconds: 10)).then((Uint8List? image) async {
+    //   if (image != null) {
+    //     final directory = await getApplicationDocumentsDirectory();
+    //     final imagePath = await File('${directory.path}/image.png').create();
+    //   print("handleCaptureClick"+imagePath.toString());
+    //     await imagePath.writeAsBytes(image);
+    //     /// Share Plugin
+    //     await Share.shareFiles([imagePath.path]);
+    //   }
+    // });
+
     return true;
         // await renderedAndSaveImage(value, cameraImage);
   }
+
+// Future takePicture(String path) async {
+// //FIXME hacky technique to avoid having black screen on some android devices
+// await _cameraController.takePicture(path);
+// }
   _fetchFiles(Directory dir) async {
     print("directory :fetch file come");
     File file=new File('/storage/emulated/0/DCIM/Camera/20211218_234840.jpg');
@@ -282,26 +1076,22 @@ print("directory is???"+externalDirectoryPath.toString());
       print("directoryyy done");
 //       // final exif =
 //       //       dd.FlutterExif.fromBytes( file.readAsBytesSync());
-      print("directoryyy : 3333");
-     final fileBytes = file.readAsBytesSync();
+      print("directoryyy : 3333333333");
 
      
 
 
-final data = await readExifFromBytes(fileBytes);
-
-  if (data.isEmpty) {
-    print("No EXIF information found");
-    return;
-  }
-
-  for (final entry in data.entries) {
-    print("${entry.key}: ${entry.value}");
-  }
 
 
+  // if (data.isEmpty) {
+  //   print("No EXIF information found");
+  //   return;
+  // }
 
-    print(data);
+  // for (final entry in data.entries) {
+  //   print("${entry.key}: ${entry.value}");
+  // }
+
     // try {
       
     // Map<String, IfdTag> imgTags =  readExifFromBytes( file.readAsBytesSync() );
@@ -336,31 +1126,94 @@ final data = await readExifFromBytes(fileBytes);
 //   });
   }
 
-  detectObject(File image) async {
-      var recognitions =
-            await this._tensorFlowService.runModelOnImage(image);
-    // var recognitions = await Tflite.detectObjectOnImage(
-    //   path: image.path,       // required
-    //   model: "SSDMobileNet",
-    //   imageMean: 127.5,     
-    //   imageStd: 127.5,      
-    //   threshold: 0.4,       // defaults to 0.1
-    //   numResultsPerClass: 10,// defaults to 5
-    //   asynch: true          // defaults to true
-    // );
-    // FileImage(image)
-    //     .resolve(ImageConfiguration())
-    //     .addListener((ImageStreamListener((ImageInfo info, bool _) {
-    //       setState(() {
-    //         _imageWidth = info.image.width.toDouble();
-    //         _imageHeight = info.image.height.toDouble();
-    //       });
-    //     }))); 
-    // setState(() {
-    //   _recognitions = recognitions;
-    // });
+  // detectObject(File image) async {
+  //     var recognitions =
+  //           await this._tensorFlowService.runModelOnImage(image);
+  //   // var recognitions = await Tflite.detectObjectOnImage(
+  //   //   path: image.path,       // required
+  //   //   model: "SSDMobileNet",
+  //   //   imageMean: 127.5,     
+  //   //   imageStd: 127.5,      
+  //   //   threshold: 0.4,       // defaults to 0.1
+  //   //   numResultsPerClass: 10,// defaults to 5
+  //   //   asynch: true          // defaults to true
+  //   // );
+  //   // FileImage(image)
+  //   //     .resolve(ImageConfiguration())
+  //   //     .addListener((ImageStreamListener((ImageInfo info, bool _) {
+  //   //       setState(() {
+  //   //         _imageWidth = info.image.width.toDouble();
+  //   //         _imageHeight = info.image.height.toDouble();
+  //   //       });
+  //   //     }))); 
+  //   // setState(() {
+  //   //   _recognitions = recognitions;
+  //   // });
+  // }
+
+  Future _downloadAssets() async {
+    bool assetsDownloaded = await downloadAssetsController.assetsDirAlreadyExists();
+    // if (assetsDownloaded) {
+    //   setState(() {
+    //     message = "Click in refresh button to force download";
+    //     print(message);
+    //   });
+    //   return;
+    // }
+print("renderr...downloadassets");
+    try {
+
+    final String nodeEndPoint = 'https://firebasestorage.googleapis.com/v0/b/labour-1ee26.appspot.com/o/assetfolder%2Fassets.zip';
+      var response = await http.get(Uri.parse(nodeEndPoint));
+    var statusCode = response.statusCode; 
+  var responseHeaders = response.headers;
+  var responseBody = response.body.split(",")[0];
+  var responsLength = response.body.length;
+  var responseBody2 = response.body.toString().split("downloadTokens\": \"")[1].split("\"")[0];
+
+  var responseBody3 = response.body.toString();
+
+  print("renderr... asssssstatusCode: ${statusCode}");
+  print("renderr...  responseHeaders: ${responseHeaders}");
+  print("renderr...  rrrrresponseBody: ${responseBody}");
+  print("renderr...  rrrrresponseBody2: ${responsLength}");
+  print("renderr...  rrrrresponseBody3: ${responseBody2}");
+  
+    // sModel(viewModel.state.type);
+      await downloadAssetsController.startDownload(
+        assetsUrl: "https://firebasestorage.googleapis.com/v0/b/labour-1ee26.appspot.com/o/assetfolder%2Fassets.zip?alt=media&token=${responseBody2}",
+        onProgress: (progressValue) {
+          downloaded = false;
+          setState(() {
+            if (progressValue < 100) {
+              message = "Downloading - ${progressValue.toStringAsFixed(2)}";
+
+            } else {
+              message = "Download completed\nClick in refresh button to force download";
+              print(message);
+              downloaded = true;
+
+        print("renderr...222"+message);
+
+loadModell(downloadAssetsController);
+
+            }
+          });
+        },
+      );
+    } on DownloadAssetsException catch (e) {
+      print(e.toString());
+      print("renderr... downloadEx"+e.toString());
+      setState(() {
+        downloaded = false;
+        message = "Error: ${e.toString()}";
+        print("renderr...333"+message);
+      });
+    }
   }
+
   Future<bool> renderedAndSaveImage(Uint8List draw, XFile camera) async {
+   CircularProgressIndicator();
     UI.Image cameraImage =
         await decodeImageFromList(await camera.readAsBytes());
     print("renderedandsaveimage 1 ");
@@ -390,27 +1243,101 @@ final data = await readExifFromBytes(fileBytes);
                 cameraImage.width.toDouble(), cameraImage.height.toDouble())));
  print("renderedandsaveimage 14 ");
     canvas.drawImage(cameraImage, Offset.zero, Paint());
- print("renderedandsaveimage 15 ");
-    codec = await UI.instantiateImageCodec(draw,
-        targetWidth: scaleWidth.toInt(), targetHeight: scaleHeight.toInt());
-    detectionImage = (await codec.getNextFrame()).image;
+ print("renderedandsaveimage 151551515151515 ");
+    // codec = await UI.instantiateImageCodec(draw,
+    //     targetWidth: scaleWidth.toInt(), targetHeight: scaleHeight.toInt());
+    // detectionImage = (await codec.getNextFrame()).image;
 
-    canvas.drawImage(detectionImage, Offset(difW.abs(), difH.abs()), Paint());
- print("renderedandsaveimage 16 ");
-    canvas.save();
-    canvas.restore();
- print("renderedandsaveimage 17 ");
+//     canvas.drawImage(detectionImage, Offset(difW.abs(), difH.abs()), Paint());
+//  print("renderedandsaveimage 16 ");
+//     canvas.save();
+//     canvas.restore();
+//  print("renderedandsaveimage 17 ");
     final picture = recorder.endRecording();
-
     var img = await picture.toImage(scaleWidth.toInt(), scaleHeight.toInt());
 
-    final pngBytes = await img.toByteData(format: UI.ImageByteFormat.png);
 
+    final pngBytes = await img.toByteData(format: UI.ImageByteFormat.png);
+    final imgBase64 = base64.encode(pngBytes!.buffer.asUint8List());
+    print("renderedandsaveimage rrrrrrrrrrrresult is "+imgBase64.toString());
     final result2 = await ImageGallerySaver.saveImage(
         Uint8List.view(pngBytes!.buffer),
         quality: 100,
         name: 'realtime_object_detection_${DateTime.now()}');
     print(result2);
+    captureflag=false;
+
+    final String nodeEndPoint = 'http://202.31.237.173/ionic';
+    //  http.post(Uri.parse(nodeEndPoint), body: {
+    //  "image": imgBase64,
+    //  "name": "thisisfilename",
+    //     }).then((res) {
+    //       print("renderedandsaveimage"+res.statusCode.toString());
+    //     }).catchError((err) {
+    //       print("renderedandsaveimage"+err.toString());
+    //     });
+    DateTime now = new DateTime.now();
+    print("renderedandsaveimage"+now.toString());
+    print("renderedandsaveimage ssssssending image to server");
+   String newnow=now.toString().replaceAll(":", "");
+   newnow=newnow.toString().replaceAll(".", "");
+   newnow=newnow.toString().replaceAll(" ", "");
+   print("renderedandsaveimage rrrrrrrrrrreplaced : "+newnow.toString());
+   try {
+     print("rendersave try come");
+
+// await _cameraController.dispose();
+initCamera();
+      http.Response response = await http.post(
+      Uri.parse(nodeEndPoint),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      }, // this header is essential to send json data
+      body: jsonEncode([
+        {'image': '$imgBase64',"name":newnow.toString()}
+      ]),
+    );
+
+    print("renderedandsaveimage result "+response.statusCode.toString());
+    if(response.statusCode.toString()=="200"){
+
+      Fluttertoast.showToast(
+          msg: "서버로 이미지가 전송되었습니다. 감사합니다.",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }else{
+
+    Fluttertoast.showToast(
+        msg: "전송오류 발생 ! "+response.statusCode.toString()+"내장메모리/Pictures 에 저장되었습니다.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0
+    );
+    }
+   } catch (e) {
+     print("render"+e.toString());
+      Fluttertoast.showToast(
+        msg: "전송오류 발생 ! "+e.toString()+"내장메모리/Pictures 에 저장되었습니다.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0
+    );
+   }
+   print("render dispose come");
+  
+    
+ 
     return true;
   }
 
@@ -431,41 +1358,41 @@ final data = await readExifFromBytes(fileBytes);
         //       _gotoRepo();
         //     },
         //     icon: Icon(AppIcons.linkOption, semanticLabel: 'Repo')),
-        PopupMenuButton<ModelType>(
-            onSelected: (item) => handleSwitchSource(item),
-            color: AppColors.white,
-            itemBuilder: (context) => [
-                  PopupMenuItem(
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.api,
-                              color: viewModel.state.isRedtoGreen()
-                                  ? AppColors.black
-                                  : AppColors.grey),
-                          Text(' Red - > g ',
-                              style: AppTextStyles.regularTextStyle(
-                                  color: viewModel.state.isRedtoGreen()
-                                      ? AppColors.black
-                                      : AppColors.grey)),
-                        ],
-                      ),
-                      value: ModelType.RedtoGreen),
-                       PopupMenuItem(
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.api,
-                              color: viewModel.state.isRedToRedLeft()
-                                  ? AppColors.black
-                                  : AppColors.grey),
-                          Text('Red - > RedLeft',
-                              style: AppTextStyles.regularTextStyle(
-                                  color: viewModel.state.isRedToRedLeft()
-                                      ? AppColors.black
-                                      : AppColors.grey)),
-                        ],
-                      ),
-                      value: ModelType.RedtoRedLeft)
-                ]),
+        // PopupMenuButton<ModelType>(
+        //     onSelected: (item) => handleSwitchSource(item),
+        //     color: AppColors.white,
+        //     itemBuilder: (context) => [
+        //           PopupMenuItem(
+        //               child: Row(
+        //                 children: <Widget>[
+        //                   Icon(Icons.api,
+        //                       color: viewModel.state.isRedtoGreen()
+        //                           ? AppColors.black
+        //                           : AppColors.grey),
+        //                   Text(' Red - > g ',
+        //                       style: AppTextStyles.regularTextStyle(
+        //                           color: viewModel.state.isRedtoGreen()
+        //                               ? AppColors.black
+        //                               : AppColors.grey)),
+        //                 ],
+        //               ),
+        //               value: ModelType.RedtoGreen),
+        //                PopupMenuItem(
+        //               child: Row(
+        //                 children: <Widget>[
+        //                   Icon(Icons.api,
+        //                       color: viewModel.state.isRedToRedLeft()
+        //                           ? AppColors.black
+        //                           : AppColors.grey),
+        //                   Text('Red - > RedLeft',
+        //                       style: AppTextStyles.regularTextStyle(
+        //                           color: viewModel.state.isRedToRedLeft()
+        //                               ? AppColors.black
+        //                               : AppColors.grey)),
+        //                 ],
+        //               ),
+        //               value: ModelType.RedtoRedLeft)
+        //         ]),
       ],
       backgroundColor: AppColors.blue,
       /*
@@ -489,20 +1416,22 @@ final data = await readExifFromBytes(fileBytes);
     final double screenHeight = max(screen.height, screen.width);
     final double screenWidth = min(screen.height, screen.width);
 
+
+//
+
     final Size previewSize =
         isInitialized ? _cameraController.value.previewSize! : Size(100, 100);
     final double previewHeight = max(previewSize.height, previewSize.width);
     final double previewWidth = min(previewSize.height, previewSize.width);
-
+viewModel.setScreenSize(screenWidth,screenHeight);
     final double screenRatio = screenHeight / screenWidth;
     final double previewRatio = previewHeight / previewWidth;
     final maxHeight =
         screenRatio > previewRatio ? screenHeight : screenWidth * previewRatio;
     final maxWidth =
         screenRatio > previewRatio ? screenHeight / previewRatio : screenWidth;
-
-    return GestureDetector(
-      onTap: FocusScope.of(context).unfocus,
+    
+return GestureDetector(
       child: Container(
         height: MediaQuery.of(context).size.height,
         width: double.infinity,
@@ -531,7 +1460,8 @@ final data = await readExifFromBytes(fileBytes);
                           }
                         }),
                   ),
-                  Consumer<HomeViewModel>(builder: (_, homeViewModel, __) {
+
+         Consumer<HomeViewModel>(builder: (_, homeViewModel, __) {
                     return ConfidenceWidget(
                       heightAppBar: heightAppBar,
                       entities: homeViewModel.state.recognitions,
@@ -544,13 +1474,15 @@ final data = await readExifFromBytes(fileBytes);
                       type: homeViewModel.state.type,
                     );
                   }),
-                  OverflowBox(
+                    OverflowBox(
                     maxHeight: maxHeight,
                     maxWidth: maxWidth,
                     child: ApertureWidget(
                       apertureController: apertureController,
                     ),
                   ),
+                 
+                
                   // Container(
                   //   decoration: BoxDecoration(
                   //     border: Border.all(color: Colors.red, width: 2)
@@ -564,6 +1496,8 @@ final data = await readExifFromBytes(fileBytes);
         ),
       ),
     );
+                  
+    
   }
 
   Widget getSearchBox() {
@@ -572,7 +1506,7 @@ final data = await readExifFromBytes(fileBytes);
         return Align(
           alignment: Alignment.bottomCenter,
           child: Container(
-            height: MediaQuery.of(context).size.height * 0.3,
+            height: MediaQuery.of(context).size.height * 0.25,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Container(
@@ -638,22 +1572,25 @@ final data = await readExifFromBytes(fileBytes);
                       ),
                     ),
 
-                   if(value.currentColor==("redleft") )...[
-                         Container(
-                        child: Image.asset("assets/redleft.png")
-                         )
-                      ]else if(value.currentColor==("red") )...[
-                         Container(
-                        child: Image.asset("assets/red.png")
-                         )
-                      ]else if(value.currentColor=="green" ) ...[
- Container(
-                        child: Image.asset("assets/green.png")
-                         )
-                      ]else ...[
-                         Container(
-                         )
-                      ],
+//                    if(value.currentColor==("redleft") )...[
+//                          Container(
+//                            padding:EdgeInsets.all(10),
+//                         child: Image.asset("assets/redleft.png",width: 150, height: 50)
+//                          )
+//                       ]else if(value.currentColor==("red") )...[
+//                          Container(
+//                            padding:EdgeInsets.all(10),
+//                         child: Image.asset("assets/red.png",width: 150, height: 50)
+//                          )
+//                       ]else if(value.currentColor=="green" ) ...[
+//  Container(
+//                            padding:EdgeInsets.all(10),
+//                         child: Image.asset("assets/green.png",width: 150, height: 50)
+//                          )
+//                       ]else ...[
+//                          Container(
+//                          )
+//                       ],
                       Container(
                       color: Colors.blue,
                       child: Text(
@@ -663,17 +1600,59 @@ final data = await readExifFromBytes(fileBytes);
                       ),
                       ),
                       Container(
-                      color: Colors.yellow ,
+                      color: Colors.red ,
+                      child: Text(
+                        refreshcount.toString()
+                      ),
+                      ),
+                      Container(
+                      color: Colors.blue ,
                       child: Text(
                         value.getboxSize.toString()
                       ),
                       ),
                       Container(
-                      color: Colors.black ,
+                      color: Colors.blue ,
                       child: Text(
+                        value.getboxSize2.toString()
+                      ),
+                      ),
+                      
+                      Container(
+                      color: Colors.black ,
+                      //not detected
+                      child: Text(
+
                         value.detectedCar.toString()
                       ),
-                      )
+                      ),
+                      // if (downloaded)
+                      //   Container(
+                      //   color: Colors.black ,
+                      //   //not detected
+                      //   child: Text(
+
+                      //     "download done"
+                      //   ),
+                      //   Container(
+                      //     width: 150,
+                      //     height: 150,
+                      //     decoration: BoxDecoration(
+                      //       image: DecorationImage(
+                      //         image: FileImage(File("${downloadAssetsController.assetsDir}/ble.jpeg")),
+                      //         fit: BoxFit.fitWidth,
+                      //       ),
+                      //     ),
+                      //   )
+                      // if(value.detectedCar==("not detected") )...[
+                      //    Container(
+                      //    )
+                      // ]else ...[
+                      //    Container(
+                      //      margin:EdgeInsets.all(5),
+                      //   child: Image.asset("assets/car.png",width: 50, height: 50)
+                      //    )
+                      // ],
 
 
 

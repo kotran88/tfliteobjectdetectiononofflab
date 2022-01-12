@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_object_detection/widgets/aperture/aperture_leaf.dart';
+import 'package:trafficawareness/widgets/aperture/aperture_leaf.dart';
 
 
 

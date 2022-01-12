@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_realtime_object_detection/pages/home_screen.dart';
-import 'package:flutter_realtime_object_detection/pages/local_screen.dart';
-import 'package:flutter_realtime_object_detection/pages/splash_screen.dart';
-import 'package:flutter_realtime_object_detection/services/navigation_service.dart';
-import 'package:flutter_realtime_object_detection/services/tensorflow_service.dart';
-import 'package:flutter_realtime_object_detection/view_models/home_view_model.dart';
-import 'package:flutter_realtime_object_detection/view_models/local_view_model.dart';
+import 'package:trafficawareness/pages/home_screen.dart';
+import 'package:trafficawareness/pages/local_screen.dart';
+import 'package:trafficawareness/pages/splash_screen.dart';
+import 'package:trafficawareness/services/navigation_service.dart';
+import 'package:trafficawareness/services/tensorflow_service.dart';
+import 'package:trafficawareness/view_models/home_view_model.dart';
+import 'package:trafficawareness/view_models/local_view_model.dart';
 import 'package:provider/provider.dart';
 
 class AppRoute {
