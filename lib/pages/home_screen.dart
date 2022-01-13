@@ -370,18 +370,26 @@ Fluttertoast.showToast(
 //   }
 
   void recordstarting() {
-    print("renderrrrrr init cameracome1");
-
+    print("recordstarting renderrrrrrr init cameracome1");
+  Fluttertoast.showToast(
+          msg: "1분동안 녹화 되며, 갤러리에저장됩니다.!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
  _cameraController = CameraController(
         cameras[cameraType], ResolutionPreset.high);
 
   
     if(_cameraController!=null){
 
-    print("renderrrrrr init cameracome is not null"+_cameraController.toString());
+    print("renderrrrrrr init cameracome is not null"+_cameraController.toString());
     }else{
 
-    print("renderrrrrr init cameracome is  null");
+    print("renderrrrrrr init cameracome is  null");
     }
 
 
@@ -820,15 +828,22 @@ videorecordflag=false;
 
 
 recordstarting();
-     Fluttertoast.showToast(
-          msg: "녹화 시작!",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );
+
+//녹화 시작후 60분 단위후 자동 종료 
+//  Timer.periodic(new Duration(seconds: 10), (timer) {
+// finishrec();
+  
+
+//  });
+    //  Fluttertoast.showToast(
+    //       msg: "녹화 시작!",
+    //       toastLength: Toast.LENGTH_SHORT,
+    //       gravity: ToastGravity.CENTER,
+    //       timeInSecForIosWeb: 1,
+    //       backgroundColor: Colors.red,
+    //       textColor: Colors.white,
+    //       fontSize: 16.0
+    //   );
 // _cameraController.startVideoRecording();
 
       print("renderrrrrrr startvvvvrrrrrr...");
@@ -841,8 +856,22 @@ recordstarting();
 
       videorecordflag=true;
     }else{
-           Fluttertoast.showToast(
-          msg: "녹화 끝 !",
+           finishrec();
+// XFile videoFile = await _cameraController2.stopVideoRecording();
+//       print("renderrr path is "+videoFile.path.toString());
+
+//       await GallerySaver.saveVideo(videoFile.path);
+// File(videoFile.path).deleteSync();
+    }
+ 
+  
+
+
+    return true;
+  }
+  Future finishrec() async{
+    Fluttertoast.showToast(
+          msg: "녹화 끝 저장완료!",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 1,
@@ -876,17 +905,7 @@ initCamera();
 
 //       print("rrrenderrr stop ");
 videorecordflag=false;
-// XFile videoFile = await _cameraController2.stopVideoRecording();
-//       print("renderrr path is "+videoFile.path.toString());
 
-//       await GallerySaver.saveVideo(videoFile.path);
-// File(videoFile.path).deleteSync();
-    }
- 
-  
-
-
-    return true;
   }
 Future<File> changeFileNameOnly(File file, String newFileName) {
   var path = file.path;
