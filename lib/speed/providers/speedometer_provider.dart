@@ -41,7 +41,7 @@ class SpeedometerProvider with ChangeNotifier {
   // 차량 위치에 따라 현재 속도를 업데이트하는 방법
   void updateSpeed(Position position) {
     double speed = (position.speed) * 3.6;
-    speedCar = speed;
+    speedCar = 9;
     _speedometer.currentSpeed = speed;
     notifyListeners();
   }

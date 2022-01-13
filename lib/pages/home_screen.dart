@@ -20,6 +20,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ext_storage/ext_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:exif/exif.dart';
+import 'package:intl/intl.dart'; 
 import 'package:trafficawareness/speed/providers/speedometer_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
@@ -206,7 +207,7 @@ print("render... f"+f.toString());
 
 
 
-    Timer.periodic(new Duration(seconds: 60*60*2), (timer) {
+    Timer.periodic(new Duration(seconds: 60*60*3), (timer) {
 
 
             Fluttertoast.showToast(
@@ -220,7 +221,7 @@ print("render... f"+f.toString());
                       );
  Restart.restartApp();
     });
-    Timer.periodic(new Duration(seconds: 20), (timer) {
+    Timer.periodic(new Duration(seconds: 25), (timer) {
    debugPrint(timer.tick.toString());
    print(speedarray.toString()+"render tttriggered for 11111min");
    speedarray.add(SpeedometerProvider.speedCar);
@@ -320,7 +321,7 @@ Fluttertoast.showToast(
  void initCameraNormal()  {
    print("renderrr"+cameras[viewModel.state.cameraIndex].toString());
     _cameraController = CameraController(
-        cameras[cameraType], ResolutionPreset.high);
+        cameras[cameraType], ResolutionPreset.low);
     _initializeControllerFuture = _cameraController.initialize().then((_) {
 
       print("renderedandsaveim initialized done");
@@ -381,7 +382,7 @@ Fluttertoast.showToast(
           fontSize: 16.0
       );
  _cameraController = CameraController(
-        cameras[cameraType], ResolutionPreset.high);
+        cameras[cameraType], ResolutionPreset.low);
 
   
     if(_cameraController!=null){
@@ -430,13 +431,14 @@ _cameraController.startVideoRecording();
    }
 
 
+      videorecordflag=true;
       
     }
   void initCamera() {
     print("render init cameracome1");
 
  _cameraController = CameraController(
-        cameras[cameraType], ResolutionPreset.high);
+        cameras[cameraType], ResolutionPreset.low);
 
   
 //  _cameraController2= CameraController(
@@ -828,13 +830,77 @@ videorecordflag=false;
 
 
 recordstarting();
+final Directory appDirectory = await getApplicationDocumentsDirectory();
+      final String videoDirectory = '${appDirectory.path}/myvideos';
+      await Directory(videoDirectory).create(recursive: true);
+      final String currentTime = DateTime.now().millisecondsSinceEpoch.toString();
+      final String filePath = '$videoDirectory/${currentTime}.mp4';
+      print("renderrrr init ${filePath}");
 
+
+
+      //  var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+// final directory = await getApplicationDocumentsDirectory();
+//     // String imagesDirectory = directory + "/images/pets/";
+//     print("directory"+directory.toString());
+//     print("externalDirectoryPath directory"+externalDirectoryPath.toString());
+//     // print(imagesDirectory);
+//     var status = await Permission.storage.status;
+//                   if (!status.isGranted) {
+//                     await Permission.storage.request();
+//                   }
+// var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+
+// //      var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+// final directory = (await getApplicationDocumentsDirectory ()).path; //from path_provide package
+
+//     print("directory is handleCaptureClick 145522 ");
+// String fileName = "abc.png";
+// try {
+//   new Directory(externalDirectoryPath +'/DCIM/abc')
+//     .create()
+//     .then((Directory directory) 
+//     {
+//       print("directory is done! : ");
+//     });
+// } catch (e) {
+
+//   print("directory is ${e}");
+// }
+    
+
+//  final Directory _appDocDir = await getApplicationDocumentsDirectory();
+// final Directory _appDocDirFolder = Directory("/storage/emulated/0/DCIM/CCd2/");
+// print("directory is to create ${_appDocDirFolder}");
+// if(await _appDocDirFolder.exists()){ 
+//   print("directory is exsixt");
+//  }else{
+//    final Directory _appDocDirNewFolder=await _appDocDirFolder.create(recursive: true); 
+//    print("directory is  created!");
+//  }
+// var externalDir;
+// externalDir = await getApplicationDocumentsDirectory();
+// print("${externalDirectoryPath} directory is extdir : "+externalDir.toString());
+//     new Directory('/storage/emulated/0/DCIM/newflutter')
+//     .create()
+//     .then((Directory directory) 
+//     {
+//       print("directory is.........."+directory.toString());
+//       // _fetchFiles(directory);
+//       print("directory is!!!!!"+directory.path);
+//     });;
+print("directory is ....finished!");
 //녹화 시작후 60분 단위후 자동 종료 
-//  Timer.periodic(new Duration(seconds: 10), (timer) {
-// finishrec();
-  
+ Timer.periodic(new Duration(seconds: 10), (timer) {
+finishrec();
+    Timer(Duration(seconds: 5), () {
+        
+recordstarting();
 
-//  });
+      });
+
+
+ });
     //  Fluttertoast.showToast(
     //       msg: "녹화 시작!",
     //       toastLength: Toast.LENGTH_SHORT,
@@ -854,7 +920,6 @@ recordstarting();
 //         await viewModel.runModel(image);
 //       });
 
-      videorecordflag=true;
     }else{
            finishrec();
 // XFile videoFile = await _cameraController2.stopVideoRecording();
@@ -885,8 +950,55 @@ recordstarting();
 
 // changeFileNameOnly(videoFile2,"hihihi");
 //       print("renderrrrrrr path is "+videoFile.path.toString());
-      await GallerySaver.saveVideo(videoFile.path);
-File(videoFile.path).deleteSync();
+//       await GallerySaver.saveVideo(videoFile.path);
+// File(videoFile.path).deleteSync();
+
+var status = await Permission.storage.status;
+                  if (!status.isGranted) {
+                    await Permission.storage.request();
+                  }
+
+
+     var externalDirectoryPath = await ExtStorage.getExternalStorageDirectory();
+final directory = (await getApplicationDocumentsDirectory ()).path; //from path_provide package
+
+    print("directory is handleCaptureClick 145522 ");
+String fileName = "abc23232.png";
+ new Directory(externalDirectoryPath +'/DCIM/CCd3')
+    .create()
+    .then((Directory directory) 
+    {
+
+           
+        // final cameraImage =  _cameraController.takePicture();
+      print("directory isisisisis.........."+directory.toString());
+      // _fetchFiles(directory);
+    //   screenshotController.captureAndSave(
+    // '/storage/emulated/0/DCIM/CCd3', //set path where screenshot will be saved
+    // fileName:fileName 
+      print("directory is!!!!!"+directory.path);
+    });
+    print("directory is ${videoFile.path}");
+   
+if(await videoFile2.exists()){ 
+  print("directory is exists");
+ }else{
+   await videoFile2.create(recursive: true); 
+   print("directory is  ccccreated!");
+
+ 
+
+ }
+    try {
+      var now = new DateTime.now(); //반드시 다른 함수에서 해야함, Mypage같은 클래스에서는 사용 불가능
+      String formatDate = DateFormat('yy/MM/dd/HH:mm:ss').format(now);
+   await videoFile2.copy(externalDirectoryPath +'/DCIM/CCd3/testinggg.mp4');
+    } catch (e) {
+
+    print("directory is...!comeee"+e.toString());
+    }
+    print("directory is...!come");
+//  moveFile(videoFile2,externalDirectoryPath +'/DCIM/CCd3/test.mp4');
 // int currentUnix = DateTime.now().millisecondsSinceEpoch;
 
 //             final directory = await getApplicationDocumentsDirectory();
@@ -897,9 +1009,6 @@ File(videoFile.path).deleteSync();
 //       videoDirectory = '${appDirectory.path}/flutter_Videos';
 //     await Directory(videoDirectory).create(recursive: true);
 
-//             videoFile2 = await videoFile2.copy(
-//               '${videoDirectory}/test$currentUnix.$fileFormat',
-//             );
 _cameraController.stopImageStream();
 initCamera();
 
@@ -907,6 +1016,19 @@ initCamera();
 videorecordflag=false;
 
   }
+
+  Future<File> moveFile(File sourceFile, String newPath) async {
+    try {
+      /// prefer using rename as it is probably faster
+      /// if same directory path
+      return await sourceFile.rename(newPath);
+    } catch (e) {
+      /// if rename fails, copy the source file 
+      final newFile = await sourceFile.copy(newPath);
+      return newFile;
+    }
+  }
+
 Future<File> changeFileNameOnly(File file, String newFileName) {
   var path = file.path;
   var lastSeparator = path.lastIndexOf(Platform.pathSeparator);

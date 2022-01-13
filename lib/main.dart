@@ -25,7 +25,7 @@ Future<void> main() async {
 
 //./data/user/0/com.onofflab.traffic/app_flutter/assets
 ///data/user/0/com.onofflab.traffic/app_flutter/assets
-//flutter_assets/assets/models/quantized22.tflite
+//flutter_ass fets/assets/models/quantized22.tflite
 
 
 // 1. 1km 5km간ㅡ 극 차
